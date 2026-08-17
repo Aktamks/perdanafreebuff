@@ -1,9 +1,10 @@
 import { StatCard } from "../StatCard";
+import { useJobs } from "../../context/JobsContext";
 import { getJobsByClientId } from "../../data/helpers";
-import { jobs } from "../../data/mockData";
 import type { Client } from "../../types";
 
 export function ClientStats({ clients }: { clients: Client[] }) {
+  const { jobs } = useJobs();
   const active = clients.filter((client) => client.status === "active").length;
   const inactive = clients.length - active;
   // Total Pekerjaan dihitung dari relasi Job.clientId terhadap daftar klien aktif,

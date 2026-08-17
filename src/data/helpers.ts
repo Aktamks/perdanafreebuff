@@ -1,4 +1,3 @@
-import { jobs } from "./mockData";
 import type { Client, Job, Team } from "../types";
 
 /**
@@ -23,8 +22,30 @@ export function getTeamById(
   return teams.find((team) => team.id === id);
 }
 
-export function getJobById(id: string | null | undefined): Job | undefined {
+/**
+ * Cari pekerjaan di dalam collection jobs AKTIF (state CRUD), bukan seed.
+ * Pass collection dari JobsContext agar pekerjaan baru hasil CRUD ikut terbaca.
+ */
+export function getJobById(
+  jobs: Job[],
+  id: string | null | undefined,
+): Job | undefined {
   return jobs.find((job) => job.id === id);
+}
+
+/**
+ * Progress pekerjaan dihitung dari data aktual: distributed / target * 100,
+ * dibatasi minimum 0% dan maksimum 100%. Tidak pernah hard-coded.
+ */
+export function getJobProgress(
+  distributedBrochures: number,
+  targetBrochures: number,
+): number {
+  if (targetBrochures <= 0) return 0;
+  const progress = Math.round(
+    (distributedBrochures / targetBrochures) * 100,
+  );
+  return Math.min(100, Math.max(0, progress));
 }
 
 /** Pekerjaan milik seorang klien, dicari lewat relasi `Job.clientId`. */

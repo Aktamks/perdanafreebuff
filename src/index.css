@@ -1234,6 +1234,29 @@ button {
   font-size: 1.1rem;
 }
 
+.job-detail-progress {
+  padding: 0.25rem 1.25rem 1.25rem;
+}
+
+.job-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.job-status-modal-job {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding-bottom: 0.25rem;
+}
+
+.job-info-list dd {
+  text-align: right;
+}
+
 /* ============ Empty state ============ */
 
 .empty-state {
@@ -1665,7 +1688,8 @@ button {
   display: none;
 }
 
-.clients-toolbar {
+.clients-toolbar,
+.jobs-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -1709,6 +1733,10 @@ button {
 
 .table-clients {
   min-width: 900px;
+}
+
+.table-jobs {
+  min-width: 1120px;
 }
 
 .cell-user {

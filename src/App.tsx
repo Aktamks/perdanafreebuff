@@ -7,6 +7,7 @@ import { Clients } from "./pages/Clients";
 import { DashboardAdmin } from "./pages/DashboardAdmin";
 import { DashboardKlien } from "./pages/DashboardKlien";
 import { DashboardTim } from "./pages/DashboardTim";
+import { JobDetail } from "./pages/JobDetail";
 import { Jobs } from "./pages/Jobs";
 import { Login } from "./pages/Login";
 import { MapMonitoring } from "./pages/MapMonitoring";
@@ -62,7 +63,22 @@ export default function App() {
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<RoleDashboard />} />
-        <Route path="/jobs" element={<Jobs />} />
+        <Route
+          path="/jobs"
+          element={
+            <AdminOnly>
+              <Jobs />
+            </AdminOnly>
+          }
+        />
+        <Route
+          path="/jobs/:id"
+          element={
+            <AdminOnly>
+              <JobDetail />
+            </AdminOnly>
+          }
+        />
         <Route path="/map" element={<MapMonitoring />} />
         <Route
           path="/teams"

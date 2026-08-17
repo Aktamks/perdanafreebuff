@@ -1,9 +1,10 @@
 import { StatCard } from "../StatCard";
+import { useJobs } from "../../context/JobsContext";
 import { getJobsByTeamId } from "../../data/helpers";
-import { jobs } from "../../data/mockData";
 import type { Team } from "../../types";
 
 export function TeamStats({ teams }: { teams: Team[] }) {
+  const { jobs } = useJobs();
   const active = teams.filter((team) => team.status === "active").length;
   const inactive = teams.length - active;
   // Total Pekerjaan dihitung dari relasi Job.teamId terhadap daftar tim aktif,

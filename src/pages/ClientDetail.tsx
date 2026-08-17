@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useClients } from "../context/ClientsContext";
+import { useJobs } from "../context/JobsContext";
 import { getClientJobStats, getJobsByClientId } from "../data/helpers";
-import { jobs } from "../data/mockData";
 import { formatDate, formatNumber, initialsOf } from "../utils/format";
 import { Icon } from "../components/icons";
 import { EmptyState } from "../components/EmptyState";
@@ -19,6 +19,7 @@ import type { Client, ClientInput } from "../types";
 export function ClientDetail() {
   const { id } = useParams();
   const { getClient, updateClient, toggleClientStatus } = useClients();
+  const { jobs } = useJobs();
   const client = getClient(id);
 
   const [editOpen, setEditOpen] = useState(false);

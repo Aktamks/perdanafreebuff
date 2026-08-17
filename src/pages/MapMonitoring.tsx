@@ -1,4 +1,5 @@
-import { jobs, teams } from "../data/mockData";
+import { useJobs } from "../context/JobsContext";
+import { useTeams } from "../context/TeamsContext";
 import { getJobById } from "../data/helpers";
 import { formatRelative, initialsOf } from "../utils/format";
 import { Icon } from "../components/icons";
@@ -41,6 +42,8 @@ const TEAM_POSITIONS: Record<string, { x: number; y: number }> = {
 };
 
 export function MapMonitoring() {
+  const { jobs } = useJobs();
+  const { teams } = useTeams();
   return (
     <>
       <div className="page-head">
@@ -62,6 +65,9 @@ export function MapMonitoring() {
 
             {jobs.map((job) => {
               const pos = JOB_POSITIONS[job.id];
+              // Posisi placeholder hanya tersedia untuk job seed; job baru hasil
+              // CRUD tidak memiliki posisi visual (peta interaktif menyusul).
+              if (!pos) return null;
               return (
                 <div
                   key={job.id}
@@ -76,6 +82,7 @@ export function MapMonitoring() {
 
             {teams.map((team) => {
               const pos = TEAM_POSITIONS[team.id];
+              if (!pos) return null;
               return (
                 <div
                   key={team.id}
@@ -124,7 +131,7 @@ export function MapMonitoring() {
                   />
                   <div className="team-active-info">
                     <strong>{team.name}</strong>
-                    <p>{getJobById(team.currentJobId)?.title ?? "Belum ada pekerjaan"}</p>
+                    <p>{getJobById(jobs, team.currentJobId)?.title ?? "Belum ada pekerjaan"}</p>
                   </div>
                   <EntityStatusBadge status={team.status} />
                 </div>

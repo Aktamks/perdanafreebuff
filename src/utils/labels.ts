@@ -29,6 +29,16 @@ export const METHOD_LABELS: Record<DistributionMethod, string> = {
   other: "Lainnya",
 };
 
+/** Kota distribusi yang tersedia untuk filter dan form pekerjaan. */
+export const JOB_CITIES = [
+  "Jakarta",
+  "Bandung",
+  "Bekasi",
+  "Tangerang",
+  "Bogor",
+  "Garut",
+] as const;
+
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
   field_team: "Tim Lapangan",

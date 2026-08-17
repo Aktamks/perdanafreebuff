@@ -1,7 +1,7 @@
 import { initialsOf } from "../../utils/format";
 import { UserAvatar } from "../UserAvatar";
+import { useJobs } from "../../context/JobsContext";
 import { getJobsByClientId } from "../../data/helpers";
-import { jobs } from "../../data/mockData";
 import { ClientStatusBadge } from "./ClientStatusBadge";
 import type { Client } from "../../types";
 
@@ -16,6 +16,7 @@ export function ClientTable({
   onEdit: (client: Client) => void;
   onToggle: (client: Client) => void;
 }) {
+  const { jobs } = useJobs();
   return (
     <div className="table-wrap">
       <table className="table table-clients">
