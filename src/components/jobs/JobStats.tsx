@@ -1,7 +1,14 @@
 import { StatCard } from "../StatCard";
 import type { Job } from "../../types";
 
-export function JobStats({ jobs }: { jobs: Job[] }) {
+export function JobStats({
+  jobs,
+  showCancelled = true,
+}: {
+  jobs: Job[];
+  /** Sembunyikan kartu "Dibatalkan" (dipakai tampilan My Jobs yang minta 4 kartu). */
+  showCancelled?: boolean;
+}) {
   const scheduled = jobs.filter((job) => job.status === "scheduled").length;
   const running = jobs.filter(
     (job) => job.status === "in_progress" || job.status === "paused",
@@ -39,13 +46,15 @@ export function JobStats({ jobs }: { jobs: Job[] }) {
         icon="check"
         color="red"
       />
-      <StatCard
-        label="Dibatalkan"
-        value={cancelled}
-        sub="status dibatalkan"
-        icon="info"
-        color="navy"
-      />
+      {showCancelled && (
+        <StatCard
+          label="Dibatalkan"
+          value={cancelled}
+          sub="status dibatalkan"
+          icon="info"
+          color="navy"
+        />
+      )}
     </div>
   );
 }

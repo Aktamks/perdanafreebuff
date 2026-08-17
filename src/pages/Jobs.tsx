@@ -4,7 +4,7 @@ import { useJobs } from "../context/JobsContext";
 import { useClients } from "../context/ClientsContext";
 import { useTeams } from "../context/TeamsContext";
 import { getClientById, getTeamById } from "../data/helpers";
-import { JOB_CITIES, JOB_STATUS_LABELS } from "../utils/labels";
+import { JOB_CITIES, JOB_STATUS_FILTERS, JOB_STATUS_LABELS } from "../utils/labels";
 import { Icon } from "../components/icons";
 import { EmptyState } from "../components/EmptyState";
 import { JobCard } from "../components/JobCard";
@@ -15,15 +15,6 @@ import { JobTable } from "../components/JobTable";
 import type { Job, JobInput, JobStatus } from "../types";
 
 type StatusFilter = "all" | JobStatus;
-
-const STATUS_OPTIONS: { key: StatusFilter; label: string }[] = [
-  { key: "all", label: "Semua" },
-  { key: "scheduled", label: "Terjadwal" },
-  { key: "in_progress", label: "Sedang Berjalan" },
-  { key: "paused", label: "Dijeda" },
-  { key: "completed", label: "Selesai" },
-  { key: "cancelled", label: "Dibatalkan" },
-];
 
 export function Jobs() {
   const { jobs, addJob, updateJob, changeJobStatus } = useJobs();
@@ -145,7 +136,7 @@ export function Jobs() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           >
-            {STATUS_OPTIONS.map((option) => (
+            {JOB_STATUS_FILTERS.map((option) => (
               <option key={option.key} value={option.key}>
                 {option.label}
               </option>

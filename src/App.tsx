@@ -11,6 +11,8 @@ import { JobDetail } from "./pages/JobDetail";
 import { Jobs } from "./pages/Jobs";
 import { Login } from "./pages/Login";
 import { MapMonitoring } from "./pages/MapMonitoring";
+import { MyJobDetail } from "./pages/MyJobDetail";
+import { MyJobs } from "./pages/MyJobs";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
 import { TeamDetail } from "./pages/TeamDetail";
@@ -53,6 +55,16 @@ function AdminOnly({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Route guard "Pekerjaan Saya": hanya Field Team & Client.
+ * Admin diarahkan ke /jobs (halaman CRUD admin).
+ */
+function MyJobsOnly({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  if (user?.role === "admin") return <Navigate to="/jobs" replace />;
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -77,6 +89,22 @@ export default function App() {
             <AdminOnly>
               <JobDetail />
             </AdminOnly>
+          }
+        />
+        <Route
+          path="/my-jobs"
+          element={
+            <MyJobsOnly>
+              <MyJobs />
+            </MyJobsOnly>
+          }
+        />
+        <Route
+          path="/my-jobs/:id"
+          element={
+            <MyJobsOnly>
+              <MyJobDetail />
+            </MyJobsOnly>
           }
         />
         <Route path="/map" element={<MapMonitoring />} />

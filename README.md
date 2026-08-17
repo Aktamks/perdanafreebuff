@@ -1,6 +1,6 @@
 # LaporBrosur
 
-Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2D: Manajemen Pekerjaan (CRUD Jobs)** (mock data, tanpa backend).
+Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2E: Pekerjaan Saya (Role-Based Job View)** (mock data, tanpa backend).
 
 ## Akun demo
 
@@ -51,4 +51,8 @@ bun run build
   - Progress dihitung dari data aktual `distributedBrochures / targetBrochures × 100` (0–100%), bukan hard-coded.
   - Hubungan pakai relasi `Job.clientId` / `Job.teamId`; klien & tim aktif tersedia di dropdown form, entity nonaktif tidak bisa dipilih untuk pekerjaan baru.
   - Dashboard Admin, Tim, Klien, detail klien/tim, dan statistik semua memakai koleksi pekerjaan aktif dari `JobsContext` (satu sumber kebenaran).
+- Modul Pekerjaan Saya (Tahap 2E): route `/my-jobs` & `/my-jobs/:id` khusus Field Team dan Client.
+  - Field Team melihat `jobs.filter(job => job.teamId === user.teamId)`; Client melihat `jobs.filter(job => job.clientId === user.clientId)` — derived data dari koleksi aktif (`JobsContext`), bukan state/collection duplikat.
+  - Detail read-only dengan **authorization check di level page**: akses job milik entitas lain di-DENY (redirect `/my-jobs`). Tidak ada tombol Edit/Delete/Ubah Status.
+  - Sidebar Tim & Klien kini mengarah ke `/my-jobs` (bukan `/jobs`); `/my-jobs` sebagai Admin diarahkan ke `/jobs`.
 - Tidak ada dependency besar selain `react-router-dom` untuk routing.

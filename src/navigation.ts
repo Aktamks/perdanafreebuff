@@ -19,7 +19,7 @@ const ADMIN_ITEMS: NavItem[] = [
 
 const TEAM_ITEMS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { to: "/jobs", label: "Pekerjaan Saya", icon: "jobs" },
+  { to: "/my-jobs", label: "Pekerjaan Saya", icon: "jobs" },
   { to: "/map", label: "Peta Monitoring", icon: "map" },
   { to: "/reports", label: "Laporan", icon: "reports" },
   { to: "/settings", label: "Pengaturan", icon: "settings" },
@@ -27,7 +27,7 @@ const TEAM_ITEMS: NavItem[] = [
 
 const CLIENT_ITEMS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: "dashboard" },
-  { to: "/jobs", label: "Pekerjaan", icon: "jobs" },
+  { to: "/my-jobs", label: "Pekerjaan Saya", icon: "jobs" },
   { to: "/map", label: "Peta Monitoring", icon: "map" },
   { to: "/reports", label: "Laporan", icon: "reports" },
   { to: "/settings", label: "Pengaturan", icon: "settings" },
