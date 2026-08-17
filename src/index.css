@@ -2048,6 +2048,61 @@ button {
   justify-content: center;
 }
 
+/* ============ Monitoring Tim Lapangan (Tahap 3B) ============ */
+
+.team-marker-wrap {
+  background: none;
+  border: none;
+}
+
+/* Marker tim: lingkaran lebih besar berisi inisial, mudah dibedakan dari dot pekerjaan. */
+.team-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 5px rgb(10 20 40 / 0.5), 0 0 0 2px rgb(10 20 40 / 0.35);
+  box-sizing: border-box;
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.team-marker-on-duty {
+  background: #2563eb;
+}
+
+.team-marker-paused {
+  background: #d97706;
+}
+
+.team-marker-scheduled {
+  background: #4a6fa5;
+}
+
+.team-marker-idle {
+  background: #64748b;
+}
+
+.legend-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.legend-group strong {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+}
+
 @media (max-width: 767px) {
   .form-row {
     grid-template-columns: 1fr;
@@ -2064,6 +2119,12 @@ button {
   .search-field {
     max-width: none;
     flex-basis: 100%;
+  }
+
+  /* Filter peta: select ikut turun rapi tanpa overflow horizontal. */
+  .jobs-toolbar .select-field {
+    flex: 1 1 calc(50% - 0.4rem);
+    min-width: 0;
   }
 
   .client-detail-head,

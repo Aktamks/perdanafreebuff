@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { teams as initialTeams } from "../data/mockData";
+import { getCityCoords } from "../data/coordinates";
 import type { Team, TeamInput } from "../types";
 
 interface TeamsContextValue {
@@ -23,9 +24,14 @@ export function TeamsProvider({ children }: { children: ReactNode }) {
   const [teams, setTeams] = useState<Team[]>(initialTeams);
 
   const addTeam = useCallback((input: TeamInput) => {
+    // Koordinat diturunkan dari kota terpilih (form belum punya input koordinat),
+    // agar tim baru langsung tampil di peta tanpa source of truth kedua.
+    const { lat, lng } = getCityCoords(input.city);
     const team: Team = {
       ...input,
       id: `t-${Date.now()}`,
+      latitude: lat,
+      longitude: lng,
       // currentJobId dikelola modul Pekerjaan, bukan lewat form tim.
       currentJobId: null,
       lastActiveAt: new Date().toISOString(),

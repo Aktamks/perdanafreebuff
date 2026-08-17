@@ -1,6 +1,6 @@
 # LaporBrosur
 
-Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 3A: Fondasi Peta Monitoring (Leaflet + OpenStreetMap)** (mock data, tanpa backend).
+Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 3B: Monitoring Tim Lapangan di Peta (Leaflet + OpenStreetMap)** (mock data, tanpa backend).
 
 ## Akun demo
 
@@ -44,7 +44,8 @@ bun run build
 ## Catatan tahap
 
 - Semua data bersifat lokal/mock; belum ada database, autentikasi backend, GPS, atau API eksternal.
-- Peta Monitoring (Tahap 3A): peta interaktif **Leaflet + OpenStreetMap** di `/map` — marker pekerjaan per status, popup detail dengan tombol "Lihat Detail", filter status, pencarian, summary aktual, fitBounds, dan ownership filter per role (Admin semua job, Field Team `teamId`, Client `clientId`). Marker adalah derived view dari koleksi `jobs` aktif (tanpa state kedua). Belum ada GPS/live tracking/teams marker real-time (Tahap 3B).
+- Peta Monitoring (Tahap 3A): peta interaktif **Leaflet + OpenStreetMap** di `/map` — marker pekerjaan per status, popup detail dengan tombol "Lihat Detail", filter status, pencarian, summary aktual, fitBounds, dan ownership filter per role (Admin semua job, Field Team `teamId`, Client `clientId`). Marker adalah derived view dari koleksi `jobs` aktif (tanpa state kedua).
+- Monitoring Tim Lapangan (Tahap 3B): marker tim (divIcon ber-inisial, dibedakan visual dari marker pekerjaan) di peta yang sama. Status tim **diturunkan dari koleksi `jobs`** (`job.teamId === team.id`): in_progress → "Sedang Bertugas", paused → "Dijeda", scheduled → "Terjadwal", tidak ada → "Tidak Ada Pekerjaan Aktif" — `Team.currentJobId` TIDAK dipakai sebagai sumber kebenaran. Popup tim menampilkan status, pekerjaan aktif (job in_progress terbaru via `startedAt`), client, progress, lokasi, dan tombol "Lihat Tim" (Admin). Filter tim & status tim (hanya mengontrol marker tim), summary tim aktual (Total/Sedang Bertugas/Dijeda/Terjadwal/Tanpa Pekerjaan), legend gabungan, fitBounds mencakup seluruh marker terlihat, dan ownership tetap (Field Team hanya tim sendiri, Client hanya tim yang mengerjakan job miliknya). Koordinat tim statis/mock di model `Team` (latitude/longitude, diturunkan dari kota saat tim baru dibuat). Belum ada GPS/geolocation/live tracking (tahap berikutnya).
 - Modul Klien (Tahap 2B): CRUD klien, search & filter, detail klien `/clients/:id`, dan perubahan status — semua memakai local state (`ClientsContext`) dan hilang setelah refresh browser.
 - Modul Tim Lapangan (Tahap 2C): CRUD tim, search & filter, detail tim `/teams/:id`, dan perubahan status — memakai local state (`TeamsContext`). Statistik tim dihitung dari relasi `Job.teamId`, bukan angka hard-coded.
 - Modul Pekerjaan (Tahap 2D): CRUD pekerjaan, search & filter (status/klien/tim/kota), detail `/jobs/:id`, dan transisi status via confirmation modal — memakai local state (`JobsContext`). Hanya Admin yang dapat mengakses `/jobs` dan `/jobs/:id` (role lain di-redirect ke `/dashboard`).
