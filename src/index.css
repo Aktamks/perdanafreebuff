@@ -1948,6 +1948,106 @@ button {
   color: #92400e;
 }
 
+/* ============ Peta Monitoring (Tahap 3A — Leaflet) ============ */
+
+.map-container {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 600px;
+  border-radius: 0;
+  overflow: hidden;
+  background: #e8ecf3;
+}
+
+.map-error {
+  padding: 1.25rem;
+}
+
+.map-empty {
+  padding: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.job-marker-wrap {
+  background: none;
+  border: none;
+}
+
+.job-marker {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 5px rgb(10 20 40 / 0.5);
+  box-sizing: content-box;
+}
+
+.marker-scheduled {
+  background: #4a6fa5;
+}
+
+.marker-in-progress {
+  background: #2563eb;
+}
+
+.marker-paused {
+  background: #d97706;
+}
+
+.marker-completed {
+  background: #16a34a;
+}
+
+.marker-cancelled {
+  background: #dc2626;
+}
+
+.marker-draft {
+  background: #94a3b8;
+}
+
+.job-popup {
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.job-popup-title {
+  display: block;
+  margin-bottom: 0.55rem;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.job-popup-rows {
+  margin: 0 0 0.7rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.job-popup-rows > div {
+  display: grid;
+  grid-template-columns: 74px 1fr;
+  gap: 0.5rem;
+}
+
+.job-popup-rows dt {
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.job-popup-rows dd {
+  margin: 0;
+  color: var(--text);
+  text-align: right;
+}
+
+.job-popup .btn {
+  width: 100%;
+  justify-content: center;
+}
+
 @media (max-width: 767px) {
   .form-row {
     grid-template-columns: 1fr;
@@ -2181,6 +2281,10 @@ button {
 
   .content {
     padding: 1.25rem 1rem;
+  }
+
+  .map-container {
+    height: 450px;
   }
 
   .login-page {

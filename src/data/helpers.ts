@@ -131,6 +131,19 @@ export function getTeamJobStats(
   return buildJobStats(getJobsByTeamId(jobs, teamId));
 }
 
+/**
+ * Validasi koordinat untuk marker peta. Tolak null/undefined/NaN dan nilai
+ * di luar rentang (lat -90..90, lng -180..180).
+ */
+export function isValidCoordinate(
+  latitude: number | null | undefined,
+  longitude: number | null | undefined,
+): boolean {
+  if (latitude == null || longitude == null) return false;
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return false;
+  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+}
+
 /** Ringkasan brosur dari koleksi jobs aktif: total target, total tersalurkan, progress rata-rata. */
 export function getJobBrochureSummary(jobs: Job[]): {
   targetBrochures: number;
