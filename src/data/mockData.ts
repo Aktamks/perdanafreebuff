@@ -297,6 +297,9 @@ export const jobs: Job[] = [
     status: "in_progress",
     createdAt: "2026-08-01T09:00:00",
     updatedAt: "2026-08-17T03:10:00",
+    startedAt: "2026-08-10T08:15:00",
+    completedAt: null,
+    operationalNotes: "Distribusi berjalan lancar di area perkantoran Jakarta Pusat.",
   },
   {
     id: "j-2",
@@ -317,6 +320,9 @@ export const jobs: Job[] = [
     status: "completed",
     createdAt: "2026-06-25T09:00:00",
     updatedAt: "2026-07-20T17:30:00",
+    startedAt: "2026-07-01T08:05:00",
+    completedAt: "2026-07-20T16:45:00",
+    operationalNotes: "Seluruh brosur Ramadan tersalurkan sesuai target.",
   },
   {
     id: "j-3",
@@ -337,6 +343,9 @@ export const jobs: Job[] = [
     status: "in_progress",
     createdAt: "2026-08-09T09:00:00",
     updatedAt: "2026-08-16T09:00:00",
+    startedAt: "2026-08-12T09:10:00",
+    completedAt: null,
+    operationalNotes: "",
   },
   {
     id: "j-4",
@@ -357,6 +366,9 @@ export const jobs: Job[] = [
     status: "scheduled",
     createdAt: "2026-08-14T09:00:00",
     updatedAt: "2026-08-14T09:00:00",
+    startedAt: null,
+    completedAt: null,
+    operationalNotes: "",
   },
   {
     id: "j-5",
@@ -377,6 +389,9 @@ export const jobs: Job[] = [
     status: "paused",
     createdAt: "2026-08-10T09:00:00",
     updatedAt: "2026-08-15T11:00:00",
+    startedAt: "2026-08-05T08:30:00",
+    completedAt: null,
+    operationalNotes: "Ditunda sementara karena hujan deras di area alun-alun.",
   },
   {
     id: "j-6",
@@ -397,6 +412,9 @@ export const jobs: Job[] = [
     status: "completed",
     createdAt: "2026-06-10T09:00:00",
     updatedAt: "2026-07-15T17:30:00",
+    startedAt: "2026-06-15T08:00:00",
+    completedAt: "2026-07-15T16:30:00",
+    operationalNotes: "Distribusi ke sekolah-sekolah di Bogor selesai tepat waktu.",
   },
   {
     id: "j-7",
@@ -417,6 +435,9 @@ export const jobs: Job[] = [
     status: "in_progress",
     createdAt: "2026-08-13T09:00:00",
     updatedAt: "2026-08-13T06:00:00",
+    startedAt: "2026-08-14T08:20:00",
+    completedAt: null,
+    operationalNotes: "",
   },
   {
     id: "j-8",
@@ -437,6 +458,9 @@ export const jobs: Job[] = [
     status: "scheduled",
     createdAt: "2026-08-15T09:00:00",
     updatedAt: "2026-08-15T09:00:00",
+    startedAt: null,
+    completedAt: null,
+    operationalNotes: "",
   },
   {
     id: "j-9",
@@ -457,6 +481,9 @@ export const jobs: Job[] = [
     status: "in_progress",
     createdAt: "2026-08-12T09:00:00",
     updatedAt: "2026-08-17T02:20:00",
+    startedAt: "2026-08-16T08:10:00",
+    completedAt: null,
+    operationalNotes: "",
   },
   {
     id: "j-10",
@@ -477,6 +504,9 @@ export const jobs: Job[] = [
     status: "draft",
     createdAt: "2026-08-16T09:00:00",
     updatedAt: "2026-08-16T09:00:00",
+    startedAt: null,
+    completedAt: null,
+    operationalNotes: "",
   },
   {
     id: "j-11",
@@ -497,6 +527,9 @@ export const jobs: Job[] = [
     status: "completed",
     createdAt: "2026-07-18T09:00:00",
     updatedAt: "2026-08-05T17:30:00",
+    startedAt: "2026-07-20T08:05:00",
+    completedAt: "2026-08-05T16:50:00",
+    operationalNotes: "Kartu member dan brosur promo tersalur semua.",
   },
   {
     id: "j-12",
@@ -517,6 +550,9 @@ export const jobs: Job[] = [
     status: "cancelled",
     createdAt: "2026-08-17T09:00:00",
     updatedAt: "2026-08-17T09:30:00",
+    startedAt: null,
+    completedAt: null,
+    operationalNotes: "Dibatalkan oleh admin sebelum distribusi dimulai.",
   },
   {
     id: "j-13",
@@ -537,6 +573,9 @@ export const jobs: Job[] = [
     status: "in_progress",
     createdAt: "2026-08-14T09:00:00",
     updatedAt: "2026-08-17T03:30:00",
+    startedAt: "2026-08-15T08:25:00",
+    completedAt: null,
+    operationalNotes: "",
   },
 ];
 

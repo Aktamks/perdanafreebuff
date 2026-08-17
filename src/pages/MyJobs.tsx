@@ -4,13 +4,19 @@ import { useAuth } from "../auth/AuthContext";
 import { useJobs } from "../context/JobsContext";
 import { useClients } from "../context/ClientsContext";
 import { useTeams } from "../context/TeamsContext";
-import { getClientById, getTeamById } from "../data/helpers";
+import {
+  getClientById,
+  getJobBrochureSummary,
+  getTeamById,
+} from "../data/helpers";
 import { JOB_STATUS_FILTERS, JOB_STATUS_LABELS } from "../utils/labels";
+import { formatNumber } from "../utils/format";
 import { Icon } from "../components/icons";
 import { EmptyState } from "../components/EmptyState";
 import { JobCard } from "../components/JobCard";
 import { JobStats } from "../components/jobs/JobStats";
 import { JobTable } from "../components/JobTable";
+import { StatCard } from "../components/StatCard";
 import type { JobStatus } from "../types";
 
 type StatusFilter = "all" | JobStatus;
@@ -66,6 +72,9 @@ export function MyJobs() {
     isTeam ? job.teamId === entityId : job.clientId === entityId,
   );
 
+  // Ringkasan brosur dari jobs terfilter (derived — bukan state terpisah).
+  const brochure = getJobBrochureSummary(myJobs);
+
   const query = search.trim().toLowerCase();
   const filtered = myJobs.filter((job) => {
     if (statusFilter !== "all" && job.status !== statusFilter) return false;
@@ -94,6 +103,30 @@ export function MyJobs() {
       </div>
 
       <JobStats jobs={myJobs} showCancelled={false} />
+
+      <div className="stats-grid">
+        <StatCard
+          label="Total Target Brosur"
+          value={formatNumber(brochure.targetBrochures)}
+          sub="target keseluruhan"
+          icon="target"
+          color="red"
+        />
+        <StatCard
+          label="Brosur Tersalurkan"
+          value={formatNumber(brochure.distributedBrochures)}
+          sub="sudah didistribusikan"
+          icon="trending"
+          color="green"
+        />
+        <StatCard
+          label="Progress Rata-rata"
+          value={`${brochure.progress}%`}
+          sub="distribusi keseluruhan"
+          icon="jobs"
+          color="blue"
+        />
+      </div>
 
       <div className="panel">
         <div className="panel-head">

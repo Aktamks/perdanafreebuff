@@ -1,7 +1,7 @@
 import { useClients } from "../context/ClientsContext";
 import { useTeams } from "../context/TeamsContext";
 import { getClientById, getTeamById } from "../data/helpers";
-import { formatDateRange, formatNumber } from "../utils/format";
+import { formatDateRange, formatDateTime, formatNumber } from "../utils/format";
 import { METHOD_LABELS } from "../utils/labels";
 import { ProgressBar } from "./ProgressBar";
 import { StatusBadge } from "./StatusBadge";
@@ -57,6 +57,18 @@ export function JobDetail({ job }: { job: Job }) {
         <div>
           <dt>Sisa</dt>
           <dd>{formatNumber(remaining)} brosur</dd>
+        </div>
+        <div>
+          <dt>Mulai</dt>
+          <dd>{job.startedAt ? formatDateTime(job.startedAt) : "-"}</dd>
+        </div>
+        <div>
+          <dt>Selesai</dt>
+          <dd>{job.completedAt ? formatDateTime(job.completedAt) : "-"}</dd>
+        </div>
+        <div>
+          <dt>Catatan Operasional</dt>
+          <dd>{job.operationalNotes || "-"}</dd>
         </div>
       </dl>
 

@@ -131,6 +131,27 @@ export function getTeamJobStats(
   return buildJobStats(getJobsByTeamId(jobs, teamId));
 }
 
+/** Ringkasan brosur dari koleksi jobs aktif: total target, total tersalurkan, progress rata-rata. */
+export function getJobBrochureSummary(jobs: Job[]): {
+  targetBrochures: number;
+  distributedBrochures: number;
+  progress: number;
+} {
+  const targetBrochures = jobs.reduce(
+    (sum, job) => sum + job.targetBrochures,
+    0,
+  );
+  const distributedBrochures = jobs.reduce(
+    (sum, job) => sum + job.distributedBrochures,
+    0,
+  );
+  const progress =
+    targetBrochures > 0
+      ? Math.min(100, Math.round((distributedBrochures / targetBrochures) * 100))
+      : 0;
+  return { targetBrochures, distributedBrochures, progress };
+}
+
 /**
  * Tanggal referensi mock agar dashboard tidak bergantung pada tanggal perangkat.
  * Selalu gunakan konstanta ini untuk menentukan "hari ini" di environment mock.
