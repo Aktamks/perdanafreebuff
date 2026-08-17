@@ -70,10 +70,14 @@ export interface Team {
   members: number;
   city: string;
   status: EntityStatus;
+  /** Pekerjaan aktif tim; dikelola modul Pekerjaan, tidak lewat form tim. */
   currentJobId: string | null;
   lastActiveAt: string;
   createdAt: string;
 }
+
+/** Input form tim (tanpa id, currentJobId, lastActiveAt, dan createdAt yang diatur sistem). */
+export type TeamInput = Omit<Team, "id" | "currentJobId" | "lastActiveAt" | "createdAt">;
 
 export interface Job {
   id: string;

@@ -1,4 +1,5 @@
 import { useClients } from "../context/ClientsContext";
+import { useTeams } from "../context/TeamsContext";
 import { getClientById, getTeamById } from "../data/helpers";
 import { formatDateRange, formatNumber } from "../utils/format";
 import { METHOD_LABELS } from "../utils/labels";
@@ -8,8 +9,9 @@ import type { Job } from "../types";
 
 export function JobDetail({ job }: { job: Job }) {
   const { clients } = useClients();
+  const { teams } = useTeams();
   const client = getClientById(clients, job.clientId);
-  const team = getTeamById(job.teamId);
+  const team = getTeamById(teams, job.teamId);
   const remaining = Math.max(job.targetBrochures - job.distributedBrochures, 0);
 
   return (

@@ -1,6 +1,6 @@
 # LaporBrosur
 
-Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2B: Manajemen Klien** (mock data, tanpa backend).
+Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2C: Manajemen Tim Lapangan** (mock data, tanpa backend).
 
 ## Akun demo
 
@@ -34,7 +34,7 @@ bun run build
 │   ├── auth/AuthContext.tsx  # Mock authentication + session
 │   ├── data/
 │   │   ├── mockData.ts       # Data mock Indonesia (users, clients, teams, jobs, activities)
-│   │   └── helpers.ts        # getClientById, getTeamById, getJobById, getJobsByClientId/TeamId
+│   │   └── helpers.ts        # getClientById/TeamById, getJobById, getJobsByClientId/TeamId, getTeamJobStats
 │   ├── utils/labels.ts       # Label & warna status pekerjaan, metode distribusi, role
 │   ├── components/           # Sidebar, Topbar, StatCard, StatusBadge, JobTable, Modal, dll
 │   └── pages/                # Login, Dashboard (3 role), Jobs, Map, Teams, Clients, Reports, Settings
@@ -46,4 +46,5 @@ bun run build
 - Semua data bersifat lokal/mock; belum ada database, autentikasi backend, GPS, atau API eksternal.
 - Peta Monitoring masih placeholder CSS dan siap diganti dengan OpenStreetMap + Leaflet.
 - Modul Klien (Tahap 2B): CRUD klien, search & filter, detail klien `/clients/:id`, dan perubahan status — semua memakai local state (`ClientsContext`) dan hilang setelah refresh browser.
+- Modul Tim Lapangan (Tahap 2C): CRUD tim, search & filter, detail tim `/teams/:id`, dan perubahan status — memakai local state (`TeamsContext`). Statistik tim dihitung dari relasi `Job.teamId`, bukan angka hard-coded.
 - Tidak ada dependency besar selain `react-router-dom` untuk routing.

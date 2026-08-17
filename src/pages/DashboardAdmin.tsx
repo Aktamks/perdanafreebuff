@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { activities, clients, jobs, teams } from "../data/mockData";
+import { useClients } from "../context/ClientsContext";
+import { useTeams } from "../context/TeamsContext";
+import { activities, jobs } from "../data/mockData";
 import { formatNumber } from "../utils/format";
 import { ActivityTimeline } from "../components/ActivityTimeline";
 import { Icon } from "../components/icons";
@@ -7,6 +9,8 @@ import { JobTable } from "../components/JobTable";
 import { StatCard } from "../components/StatCard";
 
 export function DashboardAdmin() {
+  const { clients } = useClients();
+  const { teams } = useTeams();
   const activeJobs = jobs.filter((job) => job.status === "in_progress");
   const activeTeams = teams.filter((team) => team.status === "active");
   const activeClients = clients.filter((client) => client.status === "active");

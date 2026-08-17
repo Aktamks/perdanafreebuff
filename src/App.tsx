@@ -12,6 +12,7 @@ import { Login } from "./pages/Login";
 import { MapMonitoring } from "./pages/MapMonitoring";
 import { Reports } from "./pages/Reports";
 import { Settings } from "./pages/Settings";
+import { TeamDetail } from "./pages/TeamDetail";
 import { Teams } from "./pages/Teams";
 
 /**
@@ -68,6 +69,14 @@ export default function App() {
           element={
             <AdminOnly>
               <Teams />
+            </AdminOnly>
+          }
+        />
+        <Route
+          path="/teams/:id"
+          element={
+            <AdminOnly>
+              <TeamDetail />
             </AdminOnly>
           }
         />

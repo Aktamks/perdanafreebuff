@@ -1074,8 +1074,7 @@ button {
   gap: 1.25rem;
 }
 
-.job-card,
-.team-card {
+.job-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1086,16 +1085,14 @@ button {
   gap: 1rem;
 }
 
-.job-card-head,
-.team-card-head {
+.job-card-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
 }
 
-.job-card-head h3,
-.team-card-title h3 {
+.job-card-head h3 {
   font-size: 1.02rem;
   letter-spacing: -0.01em;
 }
@@ -1122,15 +1119,6 @@ button {
 
 .job-card-progress {
   padding-bottom: 0.25rem;
-}
-
-.team-card-title p {
-  font-size: 0.82rem;
-  color: var(--text-3);
-}
-
-.team-card-head .badge {
-  flex-shrink: 0;
 }
 
 /* ============ Detail list ============ */
@@ -1866,9 +1854,111 @@ button {
     flex-basis: 100%;
   }
 
-  .client-detail-head {
+  .client-detail-head,
+  .team-detail-head {
     flex-wrap: wrap;
   }
+}
+
+/* ============ Teams module ============ */
+
+.table-teams {
+  min-width: 900px;
+}
+
+.team-cards {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.team-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.team-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.team-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.team-card-title h3 {
+  font-size: 1rem;
+}
+
+.team-card-title p {
+  font-size: 0.82rem;
+  color: var(--text-3);
+}
+
+.team-card-meta {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+.team-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.team-card-meta svg {
+  color: var(--text-3);
+  flex-shrink: 0;
+}
+
+.team-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.team-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.team-detail-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.team-detail-title h1 {
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.team-detail-title p {
+  color: var(--text-2);
+  font-size: 0.95rem;
+}
+
+.team-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.team-contact {
+  padding: 1rem 1.25rem;
 }
 
 /* ============ Responsive ============ */
