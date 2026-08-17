@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { getJobsByTeamId, isMockToday } from "../data/helpers";
+import { jobs } from "../data/mockData";
 import { formatNumber } from "../utils/format";
 import { JobCard } from "../components/JobCard";
 import { JobDetail } from "../components/JobDetail";
@@ -13,7 +14,7 @@ export function DashboardTim() {
   const { user } = useAuth();
   const [selected, setSelected] = useState<Job | null>(null);
 
-  const teamJobs = getJobsByTeamId(user?.teamId);
+  const teamJobs = getJobsByTeamId(jobs, user?.teamId);
   const todayJobs = teamJobs.filter((job) => isMockToday(job.startDate));
   const activeJobs = teamJobs.filter((job) => job.status === "in_progress");
   const doneJobs = teamJobs.filter((job) => job.status === "completed");

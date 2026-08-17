@@ -1,4 +1,4 @@
-import { jobs, teams } from "./mockData";
+import { jobs } from "./mockData";
 import type { Client, Job, Team } from "../types";
 
 /**
@@ -12,7 +12,14 @@ export function getClientById(
   return clients.find((client) => client.id === id);
 }
 
-export function getTeamById(id: string | null | undefined): Team | undefined {
+/**
+ * Cari tim di dalam collection tim AKTIF (state CRUD), bukan seed.
+ * Pass collection dari TeamsContext agar tim baru hasil CRUD ikut terbaca.
+ */
+export function getTeamById(
+  teams: Team[],
+  id: string | null | undefined,
+): Team | undefined {
   return teams.find((team) => team.id === id);
 }
 
@@ -29,46 +36,40 @@ export function getJobsByClientId(
   return jobs.filter((job) => job.clientId === clientId);
 }
 
-export function getJobsByTeamId(teamId: string | null | undefined): Job[] {
+/** Pekerjaan milik sebuah tim, dicari lewat relasi `Job.teamId`. */
+export function getJobsByTeamId(
+  jobs: Job[],
+  teamId: string | null | undefined,
+): Job[] {
   if (!teamId) return [];
   return jobs.filter((job) => job.teamId === teamId);
 }
 
-export interface ClientJobStats {
-  /** Jumlah semua pekerjaan klien. */
+export interface JobStats {
+  /** Jumlah semua pekerjaan. */
   total: number;
   /** Pekerjaan berjalan: scheduled, in_progress, paused. */
   active: number;
   /** Pekerjaan selesai: completed. */
   completed: number;
-  /** Total target brosur dari seluruh pekerjaan klien. */
+  /** Total target brosur dari seluruh pekerjaan. */
   targetBrochures: number;
-  /** Total brosur tersalurkan dari seluruh pekerjaan klien. */
+  /** Total brosur tersalurkan dari seluruh pekerjaan. */
   distributedBrochures: number;
   /** Progress keseluruhan (0-100) dihitung dari target vs tersalurkan. */
   progress: number;
 }
 
-/**
- * Statistik pekerjaan seorang klien, dihitung dari relasi `Job.clientId`.
- * Satu-satunya sumber kebenaran: collection jobs + clientId.
- */
-export function getClientJobStats(
-  jobs: Job[],
-  clientId: string | null | undefined,
-): ClientJobStats {
-  const clientJobs = getJobsByClientId(jobs, clientId);
-  const active = clientJobs.filter((job) =>
+function buildJobStats(jobs: Job[]): JobStats {
+  const active = jobs.filter((job) =>
     ["scheduled", "in_progress", "paused"].includes(job.status),
   ).length;
-  const completed = clientJobs.filter(
-    (job) => job.status === "completed",
-  ).length;
-  const targetBrochures = clientJobs.reduce(
+  const completed = jobs.filter((job) => job.status === "completed").length;
+  const targetBrochures = jobs.reduce(
     (sum, job) => sum + job.targetBrochures,
     0,
   );
-  const distributedBrochures = clientJobs.reduce(
+  const distributedBrochures = jobs.reduce(
     (sum, job) => sum + job.distributedBrochures,
     0,
   );
@@ -78,13 +79,35 @@ export function getClientJobStats(
       : 0;
 
   return {
-    total: clientJobs.length,
+    total: jobs.length,
     active,
     completed,
     targetBrochures,
     distributedBrochures,
     progress,
   };
+}
+
+/**
+ * Statistik pekerjaan seorang klien, dihitung dari relasi `Job.clientId`.
+ * Satu-satunya sumber kebenaran: collection jobs + clientId.
+ */
+export function getClientJobStats(
+  jobs: Job[],
+  clientId: string | null | undefined,
+): JobStats {
+  return buildJobStats(getJobsByClientId(jobs, clientId));
+}
+
+/**
+ * Statistik pekerjaan sebuah tim, dihitung dari relasi `Job.teamId`.
+ * Satu-satunya sumber kebenaran: collection jobs + teamId.
+ */
+export function getTeamJobStats(
+  jobs: Job[],
+  teamId: string | null | undefined,
+): JobStats {
+  return buildJobStats(getJobsByTeamId(jobs, teamId));
 }
 
 /**
