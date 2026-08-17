@@ -1,0 +1,106 @@
+export type UserRole = "admin" | "field_team" | "client";
+
+export type EntityStatus = "active" | "inactive";
+
+export type JobStatus =
+  | "draft"
+  | "scheduled"
+  | "in_progress"
+  | "paused"
+  | "completed"
+  | "cancelled";
+
+export type DistributionMethod =
+  | "hand_to_hand"
+  | "door_to_door"
+  | "car_to_car"
+  | "event"
+  | "mall"
+  | "office"
+  | "school"
+  | "other";
+
+export type ActivityType = "status" | "progress" | "evidence" | "note" | "report";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  /** Placeholder warna untuk avatar inisial (tahap mock, belum ada upload foto). */
+  avatar: string;
+  status: EntityStatus;
+  createdAt: string;
+  /** Relasi opsional: userId dari role field_team. */
+  teamId?: string;
+  /** Relasi opsional: userId dari role client. */
+  clientId?: string;
+}
+
+export interface Client {
+  id: string;
+  /** Nama kontak / penanggung jawab. */
+  name: string;
+  /** Nama perusahaan / instansi. */
+  company: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  address: string;
+  city: string;
+  status: EntityStatus;
+  /**
+   * LEGACY/DERIVED — dipertahankan hanya untuk kompatibilitas data lama.
+   * JANGAN dipakai sebagai sumber statistik; hitung dari relasi `Job.clientId`.
+   */
+  totalJobs: number;
+  createdAt: string;
+}
+
+/** Input form klien (tanpa id, totalJobs, dan createdAt yang diatur sistem). */
+export type ClientInput = Omit<Client, "id" | "totalJobs" | "createdAt">;
+
+export interface Team {
+  id: string;
+  name: string;
+  leaderName: string;
+  phone: string;
+  whatsapp: string;
+  /** Jumlah anggota tim. */
+  members: number;
+  city: string;
+  status: EntityStatus;
+  currentJobId: string | null;
+  lastActiveAt: string;
+  createdAt: string;
+}
+
+export interface Job {
+  id: string;
+  title: string;
+  clientId: string;
+  teamId: string;
+  description: string;
+  distributionMethod: DistributionMethod;
+  city: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  targetBrochures: number;
+  distributedBrochures: number;
+  progress: number;
+  startDate: string;
+  endDate: string;
+  status: JobStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Activity {
+  id: string;
+  jobId: string;
+  userId: string;
+  type: ActivityType;
+  message: string;
+  createdAt: string;
+}
