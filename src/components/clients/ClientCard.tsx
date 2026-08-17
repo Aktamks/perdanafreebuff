@@ -1,8 +1,8 @@
 import { initialsOf } from "../../utils/format";
 import { Icon } from "../icons";
 import { UserAvatar } from "../UserAvatar";
+import { useJobs } from "../../context/JobsContext";
 import { getJobsByClientId } from "../../data/helpers";
-import { jobs } from "../../data/mockData";
 import { ClientStatusBadge } from "./ClientStatusBadge";
 import type { Client } from "../../types";
 
@@ -17,6 +17,7 @@ export function ClientCard({
   onEdit: (client: Client) => void;
   onToggle: (client: Client) => void;
 }) {
+  const { jobs } = useJobs();
   return (
     <article className="client-card">
       <div className="client-card-head">

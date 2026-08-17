@@ -1,7 +1,7 @@
 import { initialsOf } from "../../utils/format";
 import { UserAvatar } from "../UserAvatar";
+import { useJobs } from "../../context/JobsContext";
 import { getJobsByTeamId } from "../../data/helpers";
-import { jobs } from "../../data/mockData";
 import { TeamStatusBadge } from "./TeamStatusBadge";
 import type { Team } from "../../types";
 
@@ -16,6 +16,7 @@ export function TeamTable({
   onEdit: (team: Team) => void;
   onToggle: (team: Team) => void;
 }) {
+  const { jobs } = useJobs();
   return (
     <div className="table-wrap">
       <table className="table table-teams">

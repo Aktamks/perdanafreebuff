@@ -1,6 +1,6 @@
 # LaporBrosur
 
-Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2C: Manajemen Tim Lapangan** (mock data, tanpa backend).
+Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2D: Manajemen Pekerjaan (CRUD Jobs)** (mock data, tanpa backend).
 
 ## Akun demo
 
@@ -47,4 +47,8 @@ bun run build
 - Peta Monitoring masih placeholder CSS dan siap diganti dengan OpenStreetMap + Leaflet.
 - Modul Klien (Tahap 2B): CRUD klien, search & filter, detail klien `/clients/:id`, dan perubahan status — semua memakai local state (`ClientsContext`) dan hilang setelah refresh browser.
 - Modul Tim Lapangan (Tahap 2C): CRUD tim, search & filter, detail tim `/teams/:id`, dan perubahan status — memakai local state (`TeamsContext`). Statistik tim dihitung dari relasi `Job.teamId`, bukan angka hard-coded.
+- Modul Pekerjaan (Tahap 2D): CRUD pekerjaan, search & filter (status/klien/tim/kota), detail `/jobs/:id`, dan transisi status via confirmation modal — memakai local state (`JobsContext`). Hanya Admin yang dapat mengakses `/jobs` dan `/jobs/:id` (role lain di-redirect ke `/dashboard`).
+  - Progress dihitung dari data aktual `distributedBrochures / targetBrochures × 100` (0–100%), bukan hard-coded.
+  - Hubungan pakai relasi `Job.clientId` / `Job.teamId`; klien & tim aktif tersedia di dropdown form, entity nonaktif tidak bisa dipilih untuk pekerjaan baru.
+  - Dashboard Admin, Tim, Klien, detail klien/tim, dan statistik semua memakai koleksi pekerjaan aktif dari `JobsContext` (satu sumber kebenaran).
 - Tidak ada dependency besar selain `react-router-dom` untuk routing.

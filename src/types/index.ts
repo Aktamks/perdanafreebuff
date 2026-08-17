@@ -100,6 +100,24 @@ export interface Job {
   updatedAt: string;
 }
 
+/**
+ * Input form pekerjaan. Field `location`/`scheduledDate`/`notes` dari spec
+ * dipetakan ke field existing Job: `address`/`startDate`/`description`.
+ * `status`, `distributedBrochures`, `progress`, `latitude`/`longitude`,
+ * `endDate`, `id`, `createdAt`, `updatedAt` diatur sistem oleh JobsContext.
+ */
+export type JobInput = {
+  title: string;
+  clientId: string;
+  teamId: string;
+  address: string;
+  city: string;
+  startDate: string;
+  distributionMethod: DistributionMethod;
+  targetBrochures: number;
+  description: string;
+};
+
 export interface Activity {
   id: string;
   jobId: string;

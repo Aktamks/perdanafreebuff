@@ -1,8 +1,8 @@
 import { initialsOf } from "../../utils/format";
 import { Icon } from "../icons";
 import { UserAvatar } from "../UserAvatar";
+import { useJobs } from "../../context/JobsContext";
 import { getJobsByTeamId } from "../../data/helpers";
-import { jobs } from "../../data/mockData";
 import { TeamStatusBadge } from "./TeamStatusBadge";
 import type { Team } from "../../types";
 
@@ -17,6 +17,7 @@ export function TeamCard({
   onEdit: (team: Team) => void;
   onToggle: (team: Team) => void;
 }) {
+  const { jobs } = useJobs();
   return (
     <article className="team-card">
       <div className="team-card-head">

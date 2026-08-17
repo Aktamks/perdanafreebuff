@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
 import { ClientsProvider } from "./context/ClientsContext";
+import { JobsProvider } from "./context/JobsContext";
 import { TeamsProvider } from "./context/TeamsContext";
 
 createRoot(document.getElementById("root")!).render(
@@ -13,7 +14,9 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <ClientsProvider>
           <TeamsProvider>
-            <App />
+            <JobsProvider>
+              <App />
+            </JobsProvider>
           </TeamsProvider>
         </ClientsProvider>
       </AuthProvider>

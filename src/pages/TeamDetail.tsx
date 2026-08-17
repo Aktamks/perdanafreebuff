@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import { useTeams } from "../context/TeamsContext";
+import { useJobs } from "../context/JobsContext";
 import { getJobsByTeamId, getTeamJobStats } from "../data/helpers";
-import { jobs } from "../data/mockData";
 import { formatDate, formatNumber, formatRelative, initialsOf } from "../utils/format";
 import { Icon } from "../components/icons";
 import { EmptyState } from "../components/EmptyState";
@@ -19,6 +19,7 @@ import type { Team, TeamInput } from "../types";
 export function TeamDetail() {
   const { id } = useParams();
   const { getTeam, updateTeam, toggleTeamStatus } = useTeams();
+  const { jobs } = useJobs();
   const team = getTeam(id);
 
   const [editOpen, setEditOpen] = useState(false);

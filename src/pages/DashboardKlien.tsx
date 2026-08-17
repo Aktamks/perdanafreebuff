@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useJobs } from "../context/JobsContext";
 import { getJobsByClientId } from "../data/helpers";
-import { jobs } from "../data/mockData";
 import { formatNumber } from "../utils/format";
 import { Icon } from "../components/icons";
 import { JobDetail } from "../components/JobDetail";
@@ -29,6 +29,7 @@ function JobReport({ job }: { job: Job }) {
 
 export function DashboardKlien() {
   const { user } = useAuth();
+  const { jobs } = useJobs();
   const [report, setReport] = useState<Job | null>(null);
 
   const myJobs = getJobsByClientId(jobs, user?.clientId);
