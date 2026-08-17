@@ -19,6 +19,17 @@ export function formatDate(iso: string): string {
   }).format(new Date(iso));
 }
 
+/** Tanggal + jam, misal: "17 Agustus 2026 pukul 18.30" (dipakai untuk startedAt/completedAt). */
+export function formatDateTime(iso: string): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(iso));
+}
+
 export function formatDateRange(start: string, end: string): string {
   return `${formatDate(start)} – ${formatDate(end)}`;
 }

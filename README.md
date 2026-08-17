@@ -1,6 +1,6 @@
 # LaporBrosur
 
-Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2E: Pekerjaan Saya (Role-Based Job View)** (mock data, tanpa backend).
+Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2F: Progress Operasional Pekerjaan** (mock data, tanpa backend).
 
 ## Akun demo
 
@@ -55,4 +55,8 @@ bun run build
   - Field Team melihat `jobs.filter(job => job.teamId === user.teamId)`; Client melihat `jobs.filter(job => job.clientId === user.clientId)` — derived data dari koleksi aktif (`JobsContext`), bukan state/collection duplikat.
   - Detail read-only dengan **authorization check di level page**: akses job milik entitas lain di-DENY (redirect `/my-jobs`). Tidak ada tombol Edit/Delete/Ubah Status.
   - Sidebar Tim & Klien kini mengarah ke `/my-jobs` (bukan `/jobs`); `/my-jobs` sebagai Admin diarahkan ke `/jobs`.
+- Modul Progress Operasional (Tahap 2F): Field Team mengelola pekerjaan di `/my-jobs/:id` — Mulai (scheduled → in_progress, isi `startedAt`), Jeda/Lanjutkan (in_progress ↔ paused tanpa mengubah `startedAt`), Update Progress (`distributedBrochures` 0..target dengan validasi), Selesai (→ completed, isi `completedAt`), dan Catatan Operasional (`operationalNotes`).
+  - **Satu source of truth**: semua mutasi memutasi koleksi `jobs` aktif di `JobsContext`; tidak ada state/collection operasional kedua. Progress selalu dihitung `distributed / target × 100` (clamp 0–100).
+  - **Security**: setiap handler memeriksa role (`field_team`), ownership (`job.teamId === user.teamId`), status aktif, dan validitas input; detail job milik entitas lain di-DENY di level page (redirect `/my-jobs`). Klien read-only (tanpa tombol operasional).
+  - Admin & Klien dapat melihat data operasional terbaru (status, distributedBrochures, progress, startedAt, completedAt, operationalNotes) di detail pekerjaan.
 - Tidak ada dependency besar selain `react-router-dom` untuk routing.

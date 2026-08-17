@@ -4,7 +4,7 @@ import { useJobs } from "../context/JobsContext";
 import { useClients } from "../context/ClientsContext";
 import { useTeams } from "../context/TeamsContext";
 import { getClientById, getJobProgress, getTeamById } from "../data/helpers";
-import { formatDate, formatNumber } from "../utils/format";
+import { formatDate, formatDateTime, formatNumber } from "../utils/format";
 import { METHOD_LABELS } from "../utils/labels";
 import { Icon } from "../components/icons";
 import { JobModal } from "../components/jobs/JobModal";
@@ -137,8 +137,20 @@ export function JobDetail() {
               <dd>{formatNumber(remaining)} brosur</dd>
             </div>
             <div>
+              <dt>Mulai</dt>
+              <dd>{currentJob.startedAt ? formatDateTime(currentJob.startedAt) : "-"}</dd>
+            </div>
+            <div>
+              <dt>Selesai</dt>
+              <dd>{currentJob.completedAt ? formatDateTime(currentJob.completedAt) : "-"}</dd>
+            </div>
+            <div>
               <dt>Catatan</dt>
               <dd>{currentJob.description || "Tidak ada catatan."}</dd>
+            </div>
+            <div>
+              <dt>Catatan Operasional</dt>
+              <dd>{currentJob.operationalNotes || "-"}</dd>
             </div>
           </dl>
 

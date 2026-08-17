@@ -96,6 +96,12 @@ export interface Job {
   startDate: string;
   endDate: string;
   status: JobStatus;
+  /** Waktu Field Team menekan "Mulai Pekerjaan" (scheduled → in_progress). Null jika belum pernah dimulai. */
+  startedAt: string | null;
+  /** Waktu pekerjaan diselesaikan (→ completed). Null jika belum selesai. */
+  completedAt: string | null;
+  /** Catatan operasional dari Field Team (Tahap 2F), terpisah dari description (catatan administrasi). */
+  operationalNotes: string;
   createdAt: string;
   updatedAt: string;
 }

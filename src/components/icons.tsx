@@ -157,6 +157,13 @@ const ICONS = {
       <circle cx="12" cy="12" r="3" />
     </>
   ),
+  play: <path d="m6 3 14 9-14 9V3Z" />,
+  pause: (
+    <>
+      <rect x="6" y="4" width="4" height="16" rx="1" />
+      <rect x="14" y="4" width="4" height="16" rx="1" />
+    </>
+  ),
 } as const;
 
 export type IconName = keyof typeof ICONS;
