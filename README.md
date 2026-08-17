@@ -1,6 +1,6 @@
 # LaporBrosur
 
-Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 2F: Progress Operasional Pekerjaan** (mock data, tanpa backend).
+Sistem manajemen dan monitoring jasa distribusi brosur — **Tahap 3A: Fondasi Peta Monitoring (Leaflet + OpenStreetMap)** (mock data, tanpa backend).
 
 ## Akun demo
 
@@ -44,7 +44,7 @@ bun run build
 ## Catatan tahap
 
 - Semua data bersifat lokal/mock; belum ada database, autentikasi backend, GPS, atau API eksternal.
-- Peta Monitoring masih placeholder CSS dan siap diganti dengan OpenStreetMap + Leaflet.
+- Peta Monitoring (Tahap 3A): peta interaktif **Leaflet + OpenStreetMap** di `/map` — marker pekerjaan per status, popup detail dengan tombol "Lihat Detail", filter status, pencarian, summary aktual, fitBounds, dan ownership filter per role (Admin semua job, Field Team `teamId`, Client `clientId`). Marker adalah derived view dari koleksi `jobs` aktif (tanpa state kedua). Belum ada GPS/live tracking/teams marker real-time (Tahap 3B).
 - Modul Klien (Tahap 2B): CRUD klien, search & filter, detail klien `/clients/:id`, dan perubahan status — semua memakai local state (`ClientsContext`) dan hilang setelah refresh browser.
 - Modul Tim Lapangan (Tahap 2C): CRUD tim, search & filter, detail tim `/teams/:id`, dan perubahan status — memakai local state (`TeamsContext`). Statistik tim dihitung dari relasi `Job.teamId`, bukan angka hard-coded.
 - Modul Pekerjaan (Tahap 2D): CRUD pekerjaan, search & filter (status/klien/tim/kota), detail `/jobs/:id`, dan transisi status via confirmation modal — memakai local state (`JobsContext`). Hanya Admin yang dapat mengakses `/jobs` dan `/jobs/:id` (role lain di-redirect ke `/dashboard`).
@@ -59,4 +59,5 @@ bun run build
   - **Satu source of truth**: semua mutasi memutasi koleksi `jobs` aktif di `JobsContext`; tidak ada state/collection operasional kedua. Progress selalu dihitung `distributed / target × 100` (clamp 0–100).
   - **Security**: setiap handler memeriksa role (`field_team`), ownership (`job.teamId === user.teamId`), status aktif, dan validitas input; detail job milik entitas lain di-DENY di level page (redirect `/my-jobs`). Klien read-only (tanpa tombol operasional).
   - Admin & Klien dapat melihat data operasional terbaru (status, distributedBrochures, progress, startedAt, completedAt, operationalNotes) di detail pekerjaan.
+- Dependency peta: `leaflet` + `@types/leaflet` (OpenStreetMap tile standar tanpa API key; atribusi tetap ditampilkan).
 - Tidak ada dependency besar selain `react-router-dom` untuk routing.

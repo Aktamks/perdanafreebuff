@@ -8,6 +8,7 @@ import {
 } from "react";
 import { jobs as initialJobs } from "../data/mockData";
 import { getJobProgress } from "../data/helpers";
+import { getCityCoords } from "../data/coordinates";
 import type { Job, JobInput, JobStatus } from "../types";
 
 interface JobsContextValue {
@@ -40,6 +41,9 @@ export function JobsProvider({ children }: { children: ReactNode }) {
 
   const addJob = useCallback((input: JobInput) => {
     const now = new Date().toISOString();
+    // Koordinat diturunkan dari kota terpilih (form belum punya input koordinat),
+    // agar Job baru langsung tampil di peta tanpa source of truth kedua.
+    const { lat, lng } = getCityCoords(input.city);
     const job: Job = {
       ...input,
       id: `j-${Date.now()}`,
@@ -47,9 +51,8 @@ export function JobsProvider({ children }: { children: ReactNode }) {
       // akan dikelola Field Team, jadi 0 dan progress dihitung.
       distributedBrochures: 0,
       progress: getJobProgress(0, input.targetBrochures),
-      // Koordinat placeholder — GPS/peta interaktif belum dipakai di tahap ini.
-      latitude: 0,
-      longitude: 0,
+      latitude: lat,
+      longitude: lng,
       endDate: input.startDate,
       status: "scheduled",
       startedAt: null,

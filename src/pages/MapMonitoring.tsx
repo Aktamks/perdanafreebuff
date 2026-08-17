@@ -1,126 +1,313 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import * as L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { useAuth } from "../auth/AuthContext";
 import { useJobs } from "../context/JobsContext";
+import { useClients } from "../context/ClientsContext";
 import { useTeams } from "../context/TeamsContext";
-import { getJobById } from "../data/helpers";
-import { formatRelative, initialsOf } from "../utils/format";
+import {
+  getClientById,
+  getJobById,
+  getJobProgress,
+  getTeamById,
+  isValidCoordinate,
+} from "../data/helpers";
+import { INDONESIA_CENTER, INDONESIA_ZOOM } from "../data/coordinates";
+import { formatNumber, formatRelative, initialsOf } from "../utils/format";
+import { JOB_STATUS_FILTERS, JOB_STATUS_LABELS } from "../utils/labels";
 import { Icon } from "../components/icons";
-import { EntityStatusBadge } from "../components/StatusBadge";
+import { EmptyState } from "../components/EmptyState";
+import { JobStats } from "../components/jobs/JobStats";
 import { UserAvatar } from "../components/UserAvatar";
-import type { JobStatus } from "../types";
+import { EntityStatusBadge } from "../components/StatusBadge";
+import type { Job, JobStatus } from "../types";
 
-const JOB_MARKER_CLASS: Record<JobStatus, string> = {
-  draft: "marker-gray",
-  scheduled: "marker-yellow",
-  in_progress: "marker-green",
-  paused: "marker-yellow",
-  completed: "marker-red",
-  cancelled: "marker-gray",
+/** Escape HTML agar nama klien/tim aman dirender di dalam popup. */
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (char) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[char] as string,
+  );
+}
+
+/** Warna marker per status (indikasi visual; status juga selalu ada di popup). */
+const MARKER_CLASS: Record<JobStatus, string> = {
+  draft: "marker-draft",
+  scheduled: "marker-scheduled",
+  in_progress: "marker-in-progress",
+  paused: "marker-paused",
+  completed: "marker-completed",
+  cancelled: "marker-cancelled",
 };
 
-const JOB_POSITIONS: Record<string, { x: number; y: number }> = {
-  "j-1": { x: 22, y: 30 },
-  "j-2": { x: 40, y: 26 },
-  "j-3": { x: 48, y: 62 },
-  "j-4": { x: 30, y: 22 },
-  "j-5": { x: 52, y: 72 },
-  "j-6": { x: 30, y: 46 },
-  "j-7": { x: 44, y: 40 },
-  "j-8": { x: 20, y: 36 },
-  "j-9": { x: 26, y: 26 },
-  "j-10": { x: 50, y: 58 },
-  "j-11": { x: 34, y: 50 },
-  "j-12": { x: 32, y: 18 },
-  "j-13": { x: 18, y: 32 },
-};
+const STATUS_LEGEND: { status: JobStatus; label: string }[] = [
+  { status: "scheduled", label: "Terjadwal" },
+  { status: "in_progress", label: "Sedang Berjalan" },
+  { status: "paused", label: "Dijeda" },
+  { status: "completed", label: "Selesai" },
+  { status: "cancelled", label: "Dibatalkan" },
+];
 
-const TEAM_POSITIONS: Record<string, { x: number; y: number }> = {
-  "t-1": { x: 24, y: 34 },
-  "t-2": { x: 42, y: 28 },
-  "t-3": { x: 50, y: 60 },
-  "t-4": { x: 44, y: 42 },
-  "t-5": { x: 32, y: 24 },
-  "t-6": { x: 34, y: 50 },
-};
+type StatusFilter = "all" | JobStatus;
 
 export function MapMonitoring() {
+  const { user } = useAuth();
   const { jobs } = useJobs();
+  const { clients } = useClients();
   const { teams } = useTeams();
+
+  const mapElRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const layerRef = useRef<L.LayerGroup | null>(null);
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [mapError, setMapError] = useState(false);
+
+  /**
+   * Filter kepemilikan (WAJIB sebelum filter lain):
+   * admin → semua job; field_team → job.teamId === user.teamId;
+   * client → job.clientId === user.clientId. Marker HANYA dibuat dari visibleJobs.
+   */
+  const visibleJobs = useMemo(() => {
+    if (user?.role === "admin") return jobs;
+    if (user?.role === "field_team") {
+      return jobs.filter((job) => job.teamId === user.teamId);
+    }
+    if (user?.role === "client") {
+      return jobs.filter((job) => job.clientId === user.clientId);
+    }
+    return [];
+  }, [jobs, user?.role, user?.teamId, user?.clientId]);
+
+  // urutan: jobs → ownership → search → status → markers
+  const filteredJobs = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return visibleJobs.filter((job) => {
+      if (statusFilter !== "all" && job.status !== statusFilter) return false;
+      if (!query) return true;
+      const client = getClientById(clients, job.clientId);
+      const team = getTeamById(teams, job.teamId);
+      return [
+        job.title,
+        job.address,
+        job.city,
+        client?.company ?? "",
+        client?.name ?? "",
+        team?.name ?? "",
+      ].some((value) => value.toLowerCase().includes(query));
+    });
+  }, [visibleJobs, search, statusFilter, clients, teams]);
+
+  const markerJobs = useMemo(
+    () =>
+      filteredJobs.filter((job) =>
+        isValidCoordinate(job.latitude, job.longitude),
+      ),
+    [filteredJobs],
+  );
+
+  const isAdmin = user?.role === "admin";
+  /** Route detail: admin → /jobs/:id (CRUD), team/client → /my-jobs/:id. */
+  const detailHref = (job: Job) =>
+    `#/${isAdmin ? "jobs" : "my-jobs"}/${job.id}`;
+
+  /** Konten popup: nama job, client, tim, lokasi, status, progress, tombol detail. */
+  function popupHtml(job: Job): string {
+    const client = getClientById(clients, job.clientId);
+    const team = getTeamById(teams, job.teamId);
+    const progress = getJobProgress(
+      job.distributedBrochures,
+      job.targetBrochures,
+    );
+    return `
+      <div class="job-popup">
+        <strong class="job-popup-title">${escapeHtml(job.title)}</strong>
+        <dl class="job-popup-rows">
+          <div><dt>Client</dt><dd>${escapeHtml(client?.company ?? "-")}</dd></div>
+          <div><dt>Tim</dt><dd>${escapeHtml(team?.name ?? "-")}</dd></div>
+          <div><dt>Lokasi</dt><dd>${escapeHtml(job.city)}</dd></div>
+          <div><dt>Status</dt><dd>${JOB_STATUS_LABELS[job.status]}</dd></div>
+          <div><dt>Progress</dt><dd>${formatNumber(job.distributedBrochures)} / ${formatNumber(job.targetBrochures)} brosur · ${progress}%</dd></div>
+        </dl>
+        <a href="${detailHref(job)}" class="btn btn-outline btn-sm">Lihat Detail</a>
+      </div>`;
+  }
+
+  // ===== Lifecycle map: init sekali, cleanup saat unmount =====
+  useEffect(() => {
+    const el = mapElRef.current;
+    if (!el) return;
+
+    let map: L.Map | null = null;
+    try {
+      map = L.map(el, {
+        center: INDONESIA_CENTER,
+        zoom: INDONESIA_ZOOM,
+        zoomControl: true,
+      });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+      layerRef.current = L.layerGroup().addTo(map);
+      mapRef.current = map;
+
+      // Pastikan ukuran peta benar setelah layout siap (hindari peta abu-abu).
+      const timer = window.setTimeout(() => map?.invalidateSize(), 200);
+
+      return () => {
+        window.clearTimeout(timer);
+        map?.remove();
+        mapRef.current = null;
+        layerRef.current = null;
+      };
+    } catch {
+      setMapError(true);
+      return () => {
+        map?.remove();
+        mapRef.current = null;
+        layerRef.current = null;
+      };
+    }
+  }, []);
+
+  // ===== Lifecycle marker: bersihkan layer lalu buat ulang dari filteredJobs =====
+  useEffect(() => {
+    const map = mapRef.current;
+    const layer = layerRef.current;
+    if (!map || !layer) return;
+
+    // Marker lama dibersihkan dulu — jangan menumpuk saat filter/search berubah.
+    layer.clearLayers();
+
+    markerJobs.forEach((job) => {
+      const icon = L.divIcon({
+        className: "job-marker-wrap",
+        html: `<span class="job-marker ${MARKER_CLASS[job.status]}" title="${escapeHtml(job.title)}"></span>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+      });
+      L.marker([job.latitude, job.longitude], { icon })
+        .bindPopup(popupHtml(job), { minWidth: 240, maxWidth: 280 })
+        .addTo(layer);
+    });
+
+    if (markerJobs.length === 1) {
+      map.setView([markerJobs[0].latitude, markerJobs[0].longitude], 13);
+    } else if (markerJobs.length > 1) {
+      map.fitBounds(
+        L.latLngBounds(
+          markerJobs.map((job) => [job.latitude, job.longitude] as [number, number]),
+        ),
+        { padding: [30, 30], maxZoom: 14 },
+      );
+    } else {
+      map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
+    }
+  }, [markerJobs, clients, teams]);
+
+  // Tim aktif: hanya role yang berhak — admin semua tim, tim hanya tim sendiri,
+  // client tidak melihat daftar tim (hindari kebocoran data via panel samping).
+  const visibleTeams = useMemo(() => {
+    if (user?.role === "admin") return teams;
+    if (user?.role === "field_team") {
+      return teams.filter((team) => team.id === user.teamId);
+    }
+    return [];
+  }, [teams, user?.role, user?.teamId]);
+
   return (
     <>
       <div className="page-head">
         <h1>Peta Monitoring</h1>
-        <p>Pantau posisi tim lapangan dan lokasi pekerjaan secara langsung.</p>
+        <p>Pantau lokasi pekerjaan distribusi pada peta interaktif.</p>
       </div>
 
-      <div className="map-layout">
-        <div className="panel">
-          <div className="panel-head">
-            <h2>Peta Lokasi</h2>
-            <span className="badge badge-gray">Placeholder — Leaflet menyusul</span>
-          </div>
+      <JobStats jobs={filteredJobs} showCancelled={false} />
 
-          <div className="map-visual">
-            <div className="map-road road-a" aria-hidden="true" />
-            <div className="map-road road-b" aria-hidden="true" />
-            <div className="map-road road-c" aria-hidden="true" />
-
-            {jobs.map((job) => {
-              const pos = JOB_POSITIONS[job.id];
-              // Posisi placeholder hanya tersedia untuk job seed; job baru hasil
-              // CRUD tidak memiliki posisi visual (peta interaktif menyusul).
-              if (!pos) return null;
-              return (
-                <div
-                  key={job.id}
-                  className={`map-marker ${JOB_MARKER_CLASS[job.status]}`}
-                  style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                >
-                  <span className="map-dot" />
-                  <span className="map-label">{job.title}</span>
-                </div>
-              );
-            })}
-
-            {teams.map((team) => {
-              const pos = TEAM_POSITIONS[team.id];
-              if (!pos) return null;
-              return (
-                <div
-                  key={team.id}
-                  className="map-marker team-marker"
-                  style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                >
-                  <span className="team-pin">{initialsOf(team.leaderName)}</span>
-                  <span className="map-label">{team.name}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="map-legend">
-            <span className="legend-item">
-              <i className="dot dot-green" /> Aktif
-            </span>
-            <span className="legend-item">
-              <i className="dot dot-red" /> Selesai
-            </span>
-            <span className="legend-item">
-              <i className="dot dot-yellow" /> Menunggu
-            </span>
-            <span className="legend-item">
-              <i className="dot dot-gray" /> Draft / Batal
-            </span>
-            <span className="legend-item">
-              <i className="dot dot-navy" /> Tim Lapangan
-            </span>
-          </div>
+      <div className="panel">
+        <div className="panel-head">
+          <h2>Peta Lokasi Pekerjaan</h2>
+          <span className="badge badge-gray">
+            {markerJobs.length} marker · {filteredJobs.length} pekerjaan
+          </span>
         </div>
 
+        <div className="clients-toolbar jobs-toolbar">
+          <div className="search-field">
+            <Icon name="search" size={16} />
+            <input
+              type="search"
+              placeholder="Cari pekerjaan..."
+              aria-label="Cari pekerjaan"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select
+            className="select-field"
+            aria-label="Filter status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
+          >
+            {JOB_STATUS_FILTERS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {mapError ? (
+          <div className="map-error">
+            <div className="alert alert-red">
+              <Icon name="info" size={16} />
+              <span>Peta tidak dapat dimuat.</span>
+            </div>
+          </div>
+        ) : (
+          <div className="map-container" ref={mapElRef} aria-label="Peta lokasi pekerjaan" />
+        )}
+
+        {!mapError && markerJobs.length === 0 && (
+          <div className="map-empty">
+            <EmptyState
+              icon="search"
+              title="Tidak ada pekerjaan pada filter ini."
+              description="Ubah filter status atau pencarian untuk melihat pekerjaan lain di peta."
+            />
+          </div>
+        )}
+
+        {!mapError && (
+          <div className="map-legend">
+            {STATUS_LEGEND.map((item) => (
+              <span key={item.status} className="legend-item">
+                <i className={`dot ${MARKER_CLASS[item.status]}`} />
+                {item.label}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {visibleTeams.length > 0 && (
         <div className="panel">
           <div className="panel-head">
             <h2>Tim Aktif</h2>
+            <span className="badge badge-gray">{visibleTeams.length} tim</span>
           </div>
           <ul className="team-active-list">
-            {teams.map((team) => (
+            {visibleTeams.map((team) => (
               <li key={team.id} className="team-active-item">
                 <div className="team-active-head">
                   <UserAvatar
@@ -131,7 +318,10 @@ export function MapMonitoring() {
                   />
                   <div className="team-active-info">
                     <strong>{team.name}</strong>
-                    <p>{getJobById(jobs, team.currentJobId)?.title ?? "Belum ada pekerjaan"}</p>
+                    <p>
+                      {getJobById(jobs, team.currentJobId)?.title ??
+                        "Belum ada pekerjaan"}
+                    </p>
                   </div>
                   <EntityStatusBadge status={team.status} />
                 </div>
@@ -142,16 +332,8 @@ export function MapMonitoring() {
               </li>
             ))}
           </ul>
-
-          <div className="alert alert-info">
-            <Icon name="info" size={16} />
-            <span>
-              Peta real (OpenStreetMap + Leaflet) akan diintegrasikan di tahap
-              berikutnya.
-            </span>
-          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }
