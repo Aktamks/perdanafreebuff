@@ -39,6 +39,16 @@ export const JOB_CITIES = [
   "Garut",
 ] as const;
 
+/** Opsi filter status pekerjaan (dipakai halaman Jobs & My Jobs). */
+export const JOB_STATUS_FILTERS: { key: JobStatus | "all"; label: string }[] = [
+  { key: "all", label: "Semua" },
+  { key: "scheduled", label: "Terjadwal" },
+  { key: "in_progress", label: "Sedang Berjalan" },
+  { key: "paused", label: "Dijeda" },
+  { key: "completed", label: "Selesai" },
+  { key: "cancelled", label: "Dibatalkan" },
+];
+
 export const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
   field_team: "Tim Lapangan",

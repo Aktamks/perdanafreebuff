@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useJobs } from "../context/JobsContext";
 import { getJobsByTeamId, isMockToday } from "../data/helpers";
+import { Icon } from "../components/icons";
 import { formatNumber } from "../utils/format";
 import { JobCard } from "../components/JobCard";
 import { JobDetail } from "../components/JobDetail";
@@ -86,7 +88,12 @@ export function DashboardTim() {
         ))}
       </div>
 
-      <h2 className="section-title">Tugas Saya</h2>
+      <div className="section-head">
+        <h2 className="section-title">Tugas Saya</h2>
+        <Link to="/my-jobs" className="link-btn">
+          Lihat Semua <Icon name="arrow-right" size={15} />
+        </Link>
+      </div>
       <div className="cards-grid">
         {teamJobs.map((job) => (
           <JobCard key={job.id} job={job} onView={setSelected} />

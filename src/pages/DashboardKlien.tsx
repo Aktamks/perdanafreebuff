@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { useJobs } from "../context/JobsContext";
 import { getJobsByClientId } from "../data/helpers";
@@ -109,6 +110,9 @@ export function DashboardKlien() {
         <div className="panel-head">
           <h2>Pekerjaan Saya</h2>
           <span className="badge badge-gray">{myJobs.length} kampanye</span>
+          <Link to="/my-jobs" className="link-btn">
+            Lihat Semua <Icon name="arrow-right" size={15} />
+          </Link>
         </div>
         <div className="table-wrap">
           <table className="table">
