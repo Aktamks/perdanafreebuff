@@ -43,7 +43,18 @@ export function TeamsProvider({ children }: { children: ReactNode }) {
   const updateTeam = useCallback(
     (id: string, input: Partial<TeamInput>) => {
       setTeams((prev) =>
-        prev.map((team) => (team.id === id ? { ...team, ...input } : team)),
+        prev.map((team) => {
+          if (team.id !== id) return team;
+          const next = { ...team, ...input };
+          // Kota berubah → turunkan ulang koordinat agar marker tim di peta
+          // ikut berpindah (konsisten dengan addTeam — bukan source of truth kedua).
+          if (input.city && input.city !== team.city) {
+            const { lat, lng } = getCityCoords(input.city);
+            next.latitude = lat;
+            next.longitude = lng;
+          }
+          return next;
+        }),
       );
     },
     [],

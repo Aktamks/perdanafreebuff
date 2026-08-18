@@ -69,6 +69,14 @@ export function JobsProvider({ children }: { children: ReactNode }) {
       prev.map((job) => {
         if (job.id !== id) return job;
         const next = { ...job, ...input };
+        // Kota berubah → turunkan ulang koordinat agar marker peta ikut
+        // berpindah (form belum punya input koordinat; kota = sumber koordinat,
+        // konsisten dengan addJob — bukan source of truth kedua).
+        if (input.city && input.city !== job.city) {
+          const { lat, lng } = getCityCoords(input.city);
+          next.latitude = lat;
+          next.longitude = lng;
+        }
         // distributedBrochures TIDAK diubah lewat form edit; progress dihitung
         // ulang dari data aktual jika target berubah.
         next.progress = getJobProgress(

@@ -192,6 +192,13 @@ export function MapMonitoring() {
   const mapRef = useRef<L.Map | null>(null);
   const jobLayerRef = useRef<L.LayerGroup | null>(null);
   const teamLayerRef = useRef<L.LayerGroup | null>(null);
+  /**
+   * Signature koordinat marker terakhir yang sudah di-fit. Fit bounds hanya
+   * dijalankan saat SET POSISI marker berubah — bukan saat data konten berubah
+   * (progress, catatan, nama) agar peta tidak zoom ulang pada perubahan kecil
+   * yang tidak relevan (spec 3C).
+   */
+  const lastFitKeyRef = useRef<string | null>(null);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -238,10 +245,13 @@ export function MapMonitoring() {
     });
   }, [visibleJobs, search, statusFilter, clients, teams]);
 
+  // Type predicate: setelah lolos isValidCoordinate, koordinat dijamin number
+  // (null/NaN/out-of-range ditolak) sehingga pemakaian di marker aman tanpa `any`.
   const markerJobs = useMemo(
     () =>
-      filteredJobs.filter((job) =>
-        isValidCoordinate(job.latitude, job.longitude),
+      filteredJobs.filter(
+        (job): job is Job & { latitude: number; longitude: number } =>
+          isValidCoordinate(job.latitude, job.longitude),
       ),
     [filteredJobs],
   );
@@ -302,8 +312,9 @@ export function MapMonitoring() {
 
   const markerTeams = useMemo(
     () =>
-      filteredTeams.filter((team) =>
-        isValidCoordinate(team.latitude, team.longitude),
+      filteredTeams.filter(
+        (team): team is Team & { latitude: number; longitude: number } =>
+          isValidCoordinate(team.latitude, team.longitude),
       ),
     [filteredTeams],
   );
@@ -340,6 +351,7 @@ export function MapMonitoring() {
   useEffect(() => {
     const el = mapElRef.current;
     if (!el) return;
+    lastFitKeyRef.current = null;
 
     let map: L.Map | null = null;
     try {
@@ -418,19 +430,28 @@ export function MapMonitoring() {
     });
 
     // Fit bounds mencakup SEMUA marker terlihat (Job + Team); fallback Indonesia.
+    // Hanya dijalankan saat set posisi berubah (lihat lastFitKeyRef) — perubahan
+    // konten saja (status/progress/catatan/nama) tetap memperbarui marker & popup,
+    // tetapi tidak me-zoom ulang peta yang sedang dilihat user.
     const positions: [number, number][] = [
       ...markerJobs.map((job) => [job.latitude, job.longitude] as [number, number]),
       ...markerTeams.map((team) => [team.latitude, team.longitude] as [number, number]),
     ];
-    if (positions.length === 1) {
-      map.setView(positions[0], 13);
-    } else if (positions.length > 1) {
-      map.fitBounds(L.latLngBounds(positions), {
-        padding: [30, 30],
-        maxZoom: 14,
-      });
-    } else {
-      map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
+    const fitKey = positions
+      .map(([lat, lng]) => `${lat.toFixed(5)},${lng.toFixed(5)}`)
+      .join("|");
+    if (fitKey !== lastFitKeyRef.current) {
+      lastFitKeyRef.current = fitKey;
+      if (positions.length === 1) {
+        map.setView(positions[0], 13);
+      } else if (positions.length > 1) {
+        map.fitBounds(L.latLngBounds(positions), {
+          padding: [30, 30],
+          maxZoom: 14,
+        });
+      } else {
+        map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
+      }
     }
   }, [markerJobs, markerTeams, clients, teams, jobs]);
 

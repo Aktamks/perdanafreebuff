@@ -24,9 +24,17 @@ export const JOB_CITY_COORDS: Record<
   Garut: { lat: -7.2104, lng: 107.9091 },
 };
 
-/** Ambil koordinat kota; fallback (0,0) dipakai jika kota tidak dikenal. */
-export function getCityCoords(city: string): { lat: number; lng: number } {
-  return (
-    JOB_CITY_COORDS[city] ?? { lat: 0, lng: 0 }
-  );
+/**
+ * Ambil koordinat kota.
+ * Kota dikenal → koordinat kota.
+ * Kota tidak dikenal → `{ lat: null, lng: null }` (BUKAN (0,0)) agar entity
+ * tetap tersimpan tetapi TIDAK membuat marker di peta (isValidCoordinate
+ * menolak null) dan aplikasi tidak crash.
+ */
+export function getCityCoords(city: string): {
+  lat: number | null;
+  lng: number | null;
+} {
+  const coords = JOB_CITY_COORDS[city];
+  return coords ? { lat: coords.lat, lng: coords.lng } : { lat: null, lng: null };
 }
