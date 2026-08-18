@@ -69,9 +69,13 @@ export interface Team {
   /** Jumlah anggota tim. */
   members: number;
   city: string;
-  /** Koordinat statis/mock untuk Peta Monitoring (Tahap 3B) — belum ada GPS/live tracking. */
-  latitude: number;
-  longitude: number;
+  /**
+   * Koordinat statis/mock untuk Peta Monitoring (Tahap 3B) — belum ada GPS/live tracking.
+   * `null` jika kota tidak dikenal → data tim tetap tersimpan, tetapi marker
+   * tim tidak ditampilkan di peta (isValidCoordinate menolak null).
+   */
+  latitude: number | null;
+  longitude: number | null;
   status: EntityStatus;
   /** Pekerjaan aktif tim; dikelola modul Pekerjaan, tidak lewat form tim. */
   currentJobId: string | null;
@@ -97,8 +101,12 @@ export interface Job {
   distributionMethod: DistributionMethod;
   city: string;
   address: string;
-  latitude: number;
-  longitude: number;
+  /**
+   * Koordinat job untuk Peta Monitoring. `null` jika kota tidak dikenal →
+   * job tetap tersimpan tetapi tidak membuat marker di peta.
+   */
+  latitude: number | null;
+  longitude: number | null;
   targetBrochures: number;
   distributedBrochures: number;
   progress: number;
