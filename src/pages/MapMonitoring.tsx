@@ -7,7 +7,6 @@ import { useClients } from "../context/ClientsContext";
 import { useTeams } from "../context/TeamsContext";
 import {
   getClientById,
-  getJobById,
   getJobProgress,
   getTeamById,
   isValidCoordinate,
@@ -18,9 +17,9 @@ import { JOB_STATUS_FILTERS, JOB_STATUS_LABELS } from "../utils/labels";
 import { Icon } from "../components/icons";
 import { EmptyState } from "../components/EmptyState";
 import { JobStats } from "../components/jobs/JobStats";
+import { StatCard } from "../components/StatCard";
 import { UserAvatar } from "../components/UserAvatar";
-import { EntityStatusBadge } from "../components/StatusBadge";
-import type { Job, JobStatus } from "../types";
+import type { Job, JobStatus, Team } from "../types";
 
 /** Escape HTML agar nama klien/tim aman dirender di dalam popup. */
 function escapeHtml(value: string): string {
@@ -37,7 +36,7 @@ function escapeHtml(value: string): string {
   );
 }
 
-/** Warna marker per status (indikasi visual; status juga selalu ada di popup). */
+/** Warna marker Job per status (indikasi visual; status juga selalu ada di popup). */
 const MARKER_CLASS: Record<JobStatus, string> = {
   draft: "marker-draft",
   scheduled: "marker-scheduled",
@@ -55,7 +54,133 @@ const STATUS_LEGEND: { status: JobStatus; label: string }[] = [
   { status: "cancelled", label: "Dibatalkan" },
 ];
 
+/**
+ * Status operasional tim (Tahap 3B) — DITURUNKAN dari koleksi jobs aktif,
+ * bukan dari `Team.currentJobId`. Prioritas: in_progress → paused → scheduled → idle.
+ */
+type TeamOperationalStatus = "on_duty" | "paused" | "scheduled" | "idle";
+
+const TEAM_STATUS_LABELS: Record<TeamOperationalStatus, string> = {
+  on_duty: "Sedang Bertugas",
+  paused: "Dijeda",
+  scheduled: "Terjadwal",
+  idle: "Tidak Ada Pekerjaan Aktif",
+};
+
+const TEAM_STATUS_FILTERS: {
+  key: TeamOperationalStatus | "all";
+  label: string;
+}[] = [
+  { key: "all", label: "Semua" },
+  { key: "on_duty", label: "Sedang Bertugas" },
+  { key: "paused", label: "Dijeda" },
+  { key: "scheduled", label: "Terjadwal" },
+  { key: "idle", label: "Tidak Ada Pekerjaan Aktif" },
+];
+
+const TEAM_MARKER_CLASS: Record<TeamOperationalStatus, string> = {
+  on_duty: "team-marker-on-duty",
+  paused: "team-marker-paused",
+  scheduled: "team-marker-scheduled",
+  idle: "team-marker-idle",
+};
+
+const TEAM_STATUS_BADGE: Record<TeamOperationalStatus, string> = {
+  on_duty: "badge-blue",
+  paused: "badge-yellow",
+  scheduled: "badge-navy",
+  idle: "badge-gray",
+};
+
+const TEAM_LEGEND: { status: TeamOperationalStatus; label: string }[] = [
+  { status: "on_duty", label: "Sedang Bertugas" },
+  { status: "paused", label: "Dijeda" },
+  { status: "scheduled", label: "Terjadwal" },
+  { status: "idle", label: "Tidak Ada Pekerjaan Aktif" },
+];
+
+/** Status operasional tim dari jobs tim tersebut (jobs = source of truth). */
+function getTeamOperationalStatus(teamJobs: Job[]): TeamOperationalStatus {
+  if (teamJobs.some((job) => job.status === "in_progress")) return "on_duty";
+  if (teamJobs.some((job) => job.status === "paused")) return "paused";
+  if (teamJobs.some((job) => job.status === "scheduled")) return "scheduled";
+  return "idle";
+}
+
+/**
+ * Pekerjaan berjalan tim: job `in_progress` dengan startedAt (fallback startDate)
+ * terbaru — aturan deterministik bila ada lebih dari satu job berjalan.
+ */
+function getActiveJobForTeam(teamJobs: Job[]): Job | undefined {
+  const running = teamJobs.filter((job) => job.status === "in_progress");
+  if (running.length === 0) return undefined;
+  return [...running].sort((a, b) =>
+    (b.startedAt ?? b.startDate).localeCompare(a.startedAt ?? a.startDate),
+  )[0];
+}
+
 type StatusFilter = "all" | JobStatus;
+
+/** Ringkasan tim dari data aktual (derived — bukan angka hard-coded). */
+function TeamMonitoringStats({ teams }: { teams: Team[] }) {
+  const { jobs } = useJobs();
+  const onDuty = teams.filter(
+    (team) =>
+      getTeamOperationalStatus(jobs.filter((job) => job.teamId === team.id)) ===
+      "on_duty",
+  ).length;
+  const paused = teams.filter(
+    (team) =>
+      getTeamOperationalStatus(jobs.filter((job) => job.teamId === team.id)) ===
+      "paused",
+  ).length;
+  const scheduled = teams.filter(
+    (team) =>
+      getTeamOperationalStatus(jobs.filter((job) => job.teamId === team.id)) ===
+      "scheduled",
+  ).length;
+  const idle = teams.length - onDuty - paused - scheduled;
+
+  return (
+    <div className="stats-grid">
+      <StatCard
+        label="Total Tim"
+        value={teams.length}
+        sub="terlihat di peta"
+        icon="teams"
+        color="navy"
+      />
+      <StatCard
+        label="Sedang Bertugas"
+        value={onDuty}
+        sub="pekerjaan berjalan"
+        icon="play"
+        color="blue"
+      />
+      <StatCard
+        label="Dijeda"
+        value={paused}
+        sub="pekerjaan dijeda"
+        icon="pause"
+        color="red"
+      />
+      <StatCard
+        label="Terjadwal"
+        value={scheduled}
+        sub="pekerjaan terjadwal"
+        icon="calendar"
+        color="green"
+      />
+      <StatCard
+        label="Tidak Ada Pekerjaan"
+        value={idle}
+        sub="tanpa pekerjaan aktif"
+        icon="info"
+        color="navy"
+      />
+    </div>
+  );
+}
 
 export function MapMonitoring() {
   const { user } = useAuth();
@@ -65,11 +190,18 @@ export function MapMonitoring() {
 
   const mapElRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
-  const layerRef = useRef<L.LayerGroup | null>(null);
+  const jobLayerRef = useRef<L.LayerGroup | null>(null);
+  const teamLayerRef = useRef<L.LayerGroup | null>(null);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [teamFilter, setTeamFilter] = useState<string>("all");
+  const [teamStatusFilter, setTeamStatusFilter] = useState<
+    TeamOperationalStatus | "all"
+  >("all");
   const [mapError, setMapError] = useState(false);
+
+  const isAdmin = user?.role === "admin";
 
   /**
    * Filter kepemilikan (WAJIB sebelum filter lain):
@@ -77,7 +209,7 @@ export function MapMonitoring() {
    * client → job.clientId === user.clientId. Marker HANYA dibuat dari visibleJobs.
    */
   const visibleJobs = useMemo(() => {
-    if (user?.role === "admin") return jobs;
+    if (isAdmin) return jobs;
     if (user?.role === "field_team") {
       return jobs.filter((job) => job.teamId === user.teamId);
     }
@@ -85,7 +217,7 @@ export function MapMonitoring() {
       return jobs.filter((job) => job.clientId === user.clientId);
     }
     return [];
-  }, [jobs, user?.role, user?.teamId, user?.clientId]);
+  }, [jobs, isAdmin, user?.role, user?.teamId, user?.clientId]);
 
   // urutan: jobs → ownership → search → status → markers
   const filteredJobs = useMemo(() => {
@@ -114,12 +246,11 @@ export function MapMonitoring() {
     [filteredJobs],
   );
 
-  const isAdmin = user?.role === "admin";
   /** Route detail: admin → /jobs/:id (CRUD), team/client → /my-jobs/:id. */
   const detailHref = (job: Job) =>
     `#/${isAdmin ? "jobs" : "my-jobs"}/${job.id}`;
 
-  /** Konten popup: nama job, client, tim, lokasi, status, progress, tombol detail. */
+  /** Konten popup Job: nama job, client, tim, lokasi, status, progress, tombol detail. */
   function popupHtml(job: Job): string {
     const client = getClientById(clients, job.clientId);
     const team = getTeamById(teams, job.teamId);
@@ -141,6 +272,70 @@ export function MapMonitoring() {
       </div>`;
   }
 
+  /**
+   * Tim yang boleh dilihat role: admin semua tim; field_team hanya tim sendiri;
+   * client hanya tim yang mengerjakan job miliknya (via relasi Job.clientId).
+   */
+  const visibleTeams = useMemo(() => {
+    if (isAdmin) return teams;
+    if (user?.role === "field_team") {
+      return teams.filter((team) => team.id === user.teamId);
+    }
+    if (user?.role === "client") {
+      const relatedTeamIds = new Set(visibleJobs.map((job) => job.teamId));
+      return teams.filter((team) => relatedTeamIds.has(team.id));
+    }
+    return [];
+  }, [teams, isAdmin, user?.role, user?.teamId, visibleJobs]);
+
+  // urutan: teams → ownership → filter tim → filter status tim → markers
+  const filteredTeams = useMemo(
+    () =>
+      visibleTeams.filter((team) => {
+        if (teamFilter !== "all" && team.id !== teamFilter) return false;
+        if (teamStatusFilter === "all") return true;
+        const teamJobs = jobs.filter((job) => job.teamId === team.id);
+        return getTeamOperationalStatus(teamJobs) === teamStatusFilter;
+      }),
+    [visibleTeams, teamFilter, teamStatusFilter, jobs],
+  );
+
+  const markerTeams = useMemo(
+    () =>
+      filteredTeams.filter((team) =>
+        isValidCoordinate(team.latitude, team.longitude),
+      ),
+    [filteredTeams],
+  );
+
+  /** Konten popup Team: nama, status, pekerjaan aktif, client, progress, lokasi. */
+  function teamPopupHtml(team: Team): string {
+    const teamJobs = jobs.filter((job) => job.teamId === team.id);
+    const status = getTeamOperationalStatus(teamJobs);
+    const activeJob = getActiveJobForTeam(teamJobs);
+    const client = activeJob
+      ? getClientById(clients, activeJob.clientId)
+      : undefined;
+    const progress = activeJob
+      ? getJobProgress(activeJob.distributedBrochures, activeJob.targetBrochures)
+      : 0;
+    const detailLink = isAdmin
+      ? `<a href="#/teams/${team.id}" class="btn btn-outline btn-sm">Lihat Tim</a>`
+      : "";
+    return `
+      <div class="job-popup team-popup">
+        <strong class="job-popup-title">${escapeHtml(team.name)}</strong>
+        <dl class="job-popup-rows">
+          <div><dt>Status</dt><dd>${TEAM_STATUS_LABELS[status]}</dd></div>
+          <div><dt>Pekerjaan Aktif</dt><dd>${activeJob ? escapeHtml(activeJob.title) : "Tidak ada"}</dd></div>
+          <div><dt>Client</dt><dd>${activeJob && client ? escapeHtml(client.company) : "—"}</dd></div>
+          ${activeJob ? `<div><dt>Progress</dt><dd>${formatNumber(activeJob.distributedBrochures)} / ${formatNumber(activeJob.targetBrochures)} · ${progress}%</dd></div>` : ""}
+          <div><dt>Lokasi</dt><dd>${escapeHtml(team.city)}</dd></div>
+        </dl>
+        ${detailLink}
+      </div>`;
+  }
+
   // ===== Lifecycle map: init sekali, cleanup saat unmount =====
   useEffect(() => {
     const el = mapElRef.current;
@@ -158,7 +353,9 @@ export function MapMonitoring() {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
-      layerRef.current = L.layerGroup().addTo(map);
+      // Dua layer terpisah (Job & Team) agar lifecycle marker bersih per jenis.
+      jobLayerRef.current = L.layerGroup().addTo(map);
+      teamLayerRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;
 
       // Pastikan ukuran peta benar setelah layout siap (hindari peta abu-abu).
@@ -168,26 +365,30 @@ export function MapMonitoring() {
         window.clearTimeout(timer);
         map?.remove();
         mapRef.current = null;
-        layerRef.current = null;
+        jobLayerRef.current = null;
+        teamLayerRef.current = null;
       };
     } catch {
       setMapError(true);
       return () => {
         map?.remove();
         mapRef.current = null;
-        layerRef.current = null;
+        jobLayerRef.current = null;
+        teamLayerRef.current = null;
       };
     }
   }, []);
 
-  // ===== Lifecycle marker: bersihkan layer lalu buat ulang dari filteredJobs =====
+  // ===== Lifecycle marker: bersihkan layer lalu buat ulang dari data terfilter =====
   useEffect(() => {
     const map = mapRef.current;
-    const layer = layerRef.current;
-    if (!map || !layer) return;
+    const jobLayer = jobLayerRef.current;
+    const teamLayer = teamLayerRef.current;
+    if (!map || !jobLayer || !teamLayer) return;
 
     // Marker lama dibersihkan dulu — jangan menumpuk saat filter/search berubah.
-    layer.clearLayers();
+    jobLayer.clearLayers();
+    teamLayer.clearLayers();
 
     markerJobs.forEach((job) => {
       const icon = L.divIcon({
@@ -198,47 +399,60 @@ export function MapMonitoring() {
       });
       L.marker([job.latitude, job.longitude], { icon })
         .bindPopup(popupHtml(job), { minWidth: 240, maxWidth: 280 })
-        .addTo(layer);
+        .addTo(jobLayer);
     });
 
-    if (markerJobs.length === 1) {
-      map.setView([markerJobs[0].latitude, markerJobs[0].longitude], 13);
-    } else if (markerJobs.length > 1) {
-      map.fitBounds(
-        L.latLngBounds(
-          markerJobs.map((job) => [job.latitude, job.longitude] as [number, number]),
-        ),
-        { padding: [30, 30], maxZoom: 14 },
+    markerTeams.forEach((team) => {
+      const status = getTeamOperationalStatus(
+        jobs.filter((job) => job.teamId === team.id),
       );
+      const icon = L.divIcon({
+        className: "team-marker-wrap",
+        html: `<span class="team-marker ${TEAM_MARKER_CLASS[status]}" title="${escapeHtml(team.name)}">${escapeHtml(initialsOf(team.name))}</span>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+      L.marker([team.latitude, team.longitude], { icon })
+        .bindPopup(teamPopupHtml(team), { minWidth: 240, maxWidth: 280 })
+        .addTo(teamLayer);
+    });
+
+    // Fit bounds mencakup SEMUA marker terlihat (Job + Team); fallback Indonesia.
+    const positions: [number, number][] = [
+      ...markerJobs.map((job) => [job.latitude, job.longitude] as [number, number]),
+      ...markerTeams.map((team) => [team.latitude, team.longitude] as [number, number]),
+    ];
+    if (positions.length === 1) {
+      map.setView(positions[0], 13);
+    } else if (positions.length > 1) {
+      map.fitBounds(L.latLngBounds(positions), {
+        padding: [30, 30],
+        maxZoom: 14,
+      });
     } else {
       map.setView(INDONESIA_CENTER, INDONESIA_ZOOM);
     }
-  }, [markerJobs, clients, teams]);
+  }, [markerJobs, markerTeams, clients, teams, jobs]);
 
-  // Tim aktif: hanya role yang berhak — admin semua tim, tim hanya tim sendiri,
-  // client tidak melihat daftar tim (hindari kebocoran data via panel samping).
-  const visibleTeams = useMemo(() => {
-    if (user?.role === "admin") return teams;
-    if (user?.role === "field_team") {
-      return teams.filter((team) => team.id === user.teamId);
-    }
-    return [];
-  }, [teams, user?.role, user?.teamId]);
+  const totalMarkers = markerJobs.length + markerTeams.length;
 
   return (
     <>
       <div className="page-head">
         <h1>Peta Monitoring</h1>
-        <p>Pantau lokasi pekerjaan distribusi pada peta interaktif.</p>
+        <p>Pantau lokasi pekerjaan dan tim lapangan pada peta interaktif.</p>
       </div>
 
       <JobStats jobs={filteredJobs} showCancelled={false} />
 
+      {visibleTeams.length > 0 && <TeamMonitoringStats teams={filteredTeams} />}
+
       <div className="panel">
         <div className="panel-head">
-          <h2>Peta Lokasi Pekerjaan</h2>
+          <h2>Peta Lokasi Pekerjaan &amp; Tim</h2>
           <span className="badge badge-gray">
-            {markerJobs.length} marker · {filteredJobs.length} pekerjaan
+            {totalMarkers} marker · {filteredJobs.length} pekerjaan ·{" "}
+            {filteredTeams.length} tim
           </span>
         </div>
 
@@ -255,11 +469,40 @@ export function MapMonitoring() {
           </div>
           <select
             className="select-field"
-            aria-label="Filter status"
+            aria-label="Filter status pekerjaan"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
           >
             {JOB_STATUS_FILTERS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select-field"
+            aria-label="Filter tim"
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+          >
+            <option value="all">Semua Tim</option>
+            {visibleTeams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.name}
+              </option>
+            ))}
+          </select>
+          <select
+            className="select-field"
+            aria-label="Filter status tim"
+            value={teamStatusFilter}
+            onChange={(e) =>
+              setTeamStatusFilter(
+                e.target.value as TeamOperationalStatus | "all",
+              )
+            }
+          >
+            {TEAM_STATUS_FILTERS.map((option) => (
               <option key={option.key} value={option.key}>
                 {option.label}
               </option>
@@ -275,24 +518,36 @@ export function MapMonitoring() {
             </div>
           </div>
         ) : (
-          <div className="map-container" ref={mapElRef} aria-label="Peta lokasi pekerjaan" />
+          <div className="map-container" ref={mapElRef} aria-label="Peta lokasi pekerjaan dan tim" />
         )}
 
-        {!mapError && markerJobs.length === 0 && (
+        {!mapError && totalMarkers === 0 && (
           <div className="map-empty">
             <EmptyState
               icon="search"
               title="Tidak ada pekerjaan pada filter ini."
-              description="Ubah filter status atau pencarian untuk melihat pekerjaan lain di peta."
+              description="Ubah filter status, tim, atau pencarian untuk melihat pekerjaan lain di peta."
             />
           </div>
         )}
 
         {!mapError && (
           <div className="map-legend">
+            <span className="legend-group">
+              <strong>Pekerjaan</strong>
+            </span>
             {STATUS_LEGEND.map((item) => (
               <span key={item.status} className="legend-item">
                 <i className={`dot ${MARKER_CLASS[item.status]}`} />
+                {item.label}
+              </span>
+            ))}
+            <span className="legend-group">
+              <strong>Tim Lapangan</strong>
+            </span>
+            {TEAM_LEGEND.map((item) => (
+              <span key={item.status} className="legend-item">
+                <i className={`dot ${TEAM_MARKER_CLASS[item.status]}`} />
                 {item.label}
               </span>
             ))}
@@ -303,34 +558,40 @@ export function MapMonitoring() {
       {visibleTeams.length > 0 && (
         <div className="panel">
           <div className="panel-head">
-            <h2>Tim Aktif</h2>
+            <h2>Tim Lapangan</h2>
             <span className="badge badge-gray">{visibleTeams.length} tim</span>
           </div>
           <ul className="team-active-list">
-            {visibleTeams.map((team) => (
-              <li key={team.id} className="team-active-item">
-                <div className="team-active-head">
-                  <UserAvatar
-                    name={team.leaderName}
-                    initials={initialsOf(team.leaderName)}
-                    color="#244585"
-                    size={38}
-                  />
-                  <div className="team-active-info">
-                    <strong>{team.name}</strong>
-                    <p>
-                      {getJobById(jobs, team.currentJobId)?.title ??
-                        "Belum ada pekerjaan"}
-                    </p>
+            {visibleTeams.map((team) => {
+              const teamJobs = jobs.filter((job) => job.teamId === team.id);
+              const status = getTeamOperationalStatus(teamJobs);
+              const activeJob = getActiveJobForTeam(teamJobs);
+              return (
+                <li key={team.id} className="team-active-item">
+                  <div className="team-active-head">
+                    <UserAvatar
+                      name={team.leaderName}
+                      initials={initialsOf(team.leaderName)}
+                      color="#244585"
+                      size={38}
+                    />
+                    <div className="team-active-info">
+                      <strong>{team.name}</strong>
+                      <p>
+                        {activeJob ? activeJob.title : "Tidak ada pekerjaan aktif"}
+                      </p>
+                    </div>
+                    <span className={`badge ${TEAM_STATUS_BADGE[status]}`}>
+                      {TEAM_STATUS_LABELS[status]}
+                    </span>
                   </div>
-                  <EntityStatusBadge status={team.status} />
-                </div>
-                <div className="team-active-meta">
-                  <Icon name="map" size={14} />
-                  {team.city} <span>· {formatRelative(team.lastActiveAt)}</span>
-                </div>
-              </li>
-            ))}
+                  <div className="team-active-meta">
+                    <Icon name="map" size={14} />
+                    {team.city} <span>· {formatRelative(team.lastActiveAt)}</span>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}

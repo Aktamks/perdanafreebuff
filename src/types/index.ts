@@ -69,6 +69,9 @@ export interface Team {
   /** Jumlah anggota tim. */
   members: number;
   city: string;
+  /** Koordinat statis/mock untuk Peta Monitoring (Tahap 3B) — belum ada GPS/live tracking. */
+  latitude: number;
+  longitude: number;
   status: EntityStatus;
   /** Pekerjaan aktif tim; dikelola modul Pekerjaan, tidak lewat form tim. */
   currentJobId: string | null;
@@ -76,8 +79,14 @@ export interface Team {
   createdAt: string;
 }
 
-/** Input form tim (tanpa id, currentJobId, lastActiveAt, dan createdAt yang diatur sistem). */
-export type TeamInput = Omit<Team, "id" | "currentJobId" | "lastActiveAt" | "createdAt">;
+/**
+ * Input form tim (tanpa id, latitude/longitude, currentJobId, lastActiveAt,
+ * dan createdAt yang diatur sistem). Koordinat diturunkan dari kota terpilih.
+ */
+export type TeamInput = Omit<
+  Team,
+  "id" | "latitude" | "longitude" | "currentJobId" | "lastActiveAt" | "createdAt"
+>;
 
 export interface Job {
   id: string;
