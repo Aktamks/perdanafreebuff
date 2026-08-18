@@ -1969,6 +1969,14 @@ button {
   border-top: 1px solid var(--border);
 }
 
+/* Tombol Reset Filter di toolbar peta. */
+.reset-filter-btn {
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .job-marker-wrap {
   background: none;
   border: none;

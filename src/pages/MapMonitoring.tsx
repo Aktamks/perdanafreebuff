@@ -210,6 +210,24 @@ export function MapMonitoring() {
 
   const isAdmin = user?.role === "admin";
 
+  /** Apakah ada filter/search yang aktif (untuk tombol Reset Filter). */
+  const hasActiveFilter = useMemo(
+    () =>
+      search.trim() !== "" ||
+      statusFilter !== "all" ||
+      teamFilter !== "all" ||
+      teamStatusFilter !== "all",
+    [search, statusFilter, teamFilter, teamStatusFilter],
+  );
+
+  /** Reset semua filter/search ke default. */
+  function resetFilters() {
+    setSearch("");
+    setStatusFilter("all");
+    setTeamFilter("all");
+    setTeamStatusFilter("all");
+  }
+
   /**
    * Filter kepemilikan (WAJIB sebelum filter lain):
    * admin → semua job; field_team → job.teamId === user.teamId;
@@ -513,22 +531,35 @@ export function MapMonitoring() {
               </option>
             ))}
           </select>
-          <select
-            className="select-field"
-            aria-label="Filter status tim"
-            value={teamStatusFilter}
-            onChange={(e) =>
-              setTeamStatusFilter(
-                e.target.value as TeamOperationalStatus | "all",
-              )
-            }
-          >
-            {TEAM_STATUS_FILTERS.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          {isAdmin && (
+            <select
+              className="select-field"
+              aria-label="Filter status tim"
+              value={teamStatusFilter}
+              onChange={(e) =>
+                setTeamStatusFilter(
+                  e.target.value as TeamOperationalStatus | "all",
+                )
+              }
+            >
+              {TEAM_STATUS_FILTERS.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
+          {hasActiveFilter && (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm reset-filter-btn"
+              onClick={resetFilters}
+              aria-label="Reset semua filter"
+            >
+              <Icon name="info" size={14} />
+              Reset Filter
+            </button>
+          )}
         </div>
 
         {mapError ? (
